@@ -768,7 +768,6 @@ function makeShark() {
   gillL.position.set(1.1, -0.05, 0.68);
   gillR.position.set(1.1, -0.05, -0.68);
   group.add(body, back, belly, fin, tail, jaw, eyeL, eyeR, gillL, gillR);
-  group.rotation.y = Math.PI / 2;
   const r = 20 + Math.random() * 75;
   const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -60 + Math.random() * 40, Math.sin(a) * r);
@@ -1500,7 +1499,7 @@ function updateSharks(dt, now) {
     shark.bob += dt * 2.8;
     shark.mesh.position.y += Math.sin(shark.bob) * 0.02;
     shark.mesh.lookAt(player.pos);
-    shark.mesh.rotation.y += Math.PI / 2;
+    shark.mesh.rotation.y -= Math.PI / 2;
     if (dist < (shark.collisionRadius + player.radius)) {
       let killed = false;
       if (!shark.hitCooldown || now - shark.hitCooldown > 120) {
