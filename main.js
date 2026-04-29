@@ -151,10 +151,15 @@ app.innerHTML = `
 
   <div id="notice"></div>
   <div id="crosshair"><div class="dot"></div></div>
-  <div id="hud">
+  <div id="healthHud" class="card hp-card">
+    <div class="hud-title">HP</div>
     <div class="bar"><div id="healthFill" class="fill"></div><div class="barLabel" id="healthLabel"></div></div>
-    <div class="bar"><div id="xpFill" class="fill"></div><div class="barLabel" id="xpLabel"></div></div>
   </div>
+  <div id="hud">
+    <div class="bar xp-bar-shell"><div id="xpFill" class="fill"></div><div class="barLabel" id="xpLabel"></div></div>
+  </div>
+  <div id="xpBurst" class="hidden">✦ XP GAIN ✦</div>
+  <div id="levelUpFlash" class="hidden">✦ LEVEL UP ✦</div>
 </div>`;
 
 const el = Object.fromEntries([...document.querySelectorAll('[id]')].map(node => [node.id, node]));
@@ -231,35 +236,30 @@ for (let i = 0; i < 90; i++) {
   const group = new THREE.Group();
   const colors = [0xff7aa2, 0xff9966, 0xa66cff, 0xffcc66, 0x66e0ff, 0xff6680];
   const color = colors[i % colors.length];
-  const stem = new THREE.Mesh(
-    new THREE.BoxGeometry(0.55, 2.8 + Math.random() * 2.4, 0.55),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.88 })
-  );
-  stem.position.y = stem.geometry.parameters.height / 2;
-  group.add(stem);
-  for (let j = 0; j < 8; j++) {
-    const petal = new THREE.Mesh(
-      new THREE.BoxGeometry(0.9 + Math.random() * 0.8, 0.45, 0.9 + Math.random() * 0.8),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.82 })
-    );
-    const angle = (j / 8) * Math.PI * 2;
-    const radius = 0.85 + Math.random() * 0.5;
-    petal.position.set(Math.cos(angle) * radius, stem.geometry.parameters.height + 0.15 + Math.random() * 0.8, Math.sin(angle) * radius);
-    petal.rotation.y = angle;
-    petal.rotation.z = (Math.random() - 0.5) * 0.25;
-    group.add(petal);
-  }
-  for (let j = 0; j < 4; j++) {
-    const arm = new THREE.Mesh(
-      new THREE.BoxGeometry(0.38, 1.6 + Math.random() * 1.2, 0.38),
+  const branchCount = 4 + Math.floor(Math.random() * 6);
+  for (let j = 0; j < branchCount; j++) {
+    const h = 1.4 + Math.random() * 6.5;
+    const branch = new THREE.Mesh(
+      new THREE.BoxGeometry(0.35 + Math.random() * 0.5, h, 0.35 + Math.random() * 0.5),
       new THREE.MeshStandardMaterial({ color, roughness: 0.86 })
     );
-    const angle = (j / 4) * Math.PI * 2 + Math.PI / 4;
-    arm.position.set(Math.cos(angle) * 0.8, 1.4 + Math.random() * 1.2, Math.sin(angle) * 0.8);
-    arm.rotation.z = 0.55;
-    arm.rotation.x = (Math.random() - 0.5) * 0.4;
-    group.add(arm);
+    const angle = (j / branchCount) * Math.PI * 2;
+    const radius = Math.random() * 1.4;
+    branch.position.set(Math.cos(angle) * radius, h / 2, Math.sin(angle) * radius);
+    branch.rotation.z = (Math.random() - 0.5) * 0.5;
+    branch.rotation.x = (Math.random() - 0.5) * 0.25;
+    group.add(branch);
+    if (Math.random() > 0.45) {
+      const nub = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.82 })
+      );
+      nub.position.set(branch.position.x + (Math.random() - 0.5) * 0.6, h + (Math.random() - 0.2) * 0.8, branch.position.z + (Math.random() - 0.5) * 0.6);
+      group.add(nub);
+    }
   }
+  const scale = 0.8 + Math.random() * 3.6;
+  group.scale.setScalar(scale);
   const r = 12 + Math.random() * 90;
   const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -83, Math.sin(a) * r);
@@ -600,10 +600,16 @@ for (let i = 0; i < 2; i++) makeNarwhal();
 
 function addXp(amount) {
   state.xp += amount;
+  el.xpBurst.classList.remove('hidden');
+  clearTimeout(addXp.burstTimer);
+  addXp.burstTimer = setTimeout(() => el.xpBurst.classList.add('hidden'), 550);
   while (state.xp >= config.xpToNext()) {
     state.xp -= config.xpToNext();
     state.level += 1;
     state.currency += 15;
+    el.levelUpFlash.classList.remove('hidden');
+    clearTimeout(addXp.levelTimer);
+    addXp.levelTimer = setTimeout(() => el.levelUpFlash.classList.add('hidden'), 1600);
     showNotice(`Level up! Now level ${state.level}`);
   }
 }
@@ -651,6 +657,7 @@ function updateHUD() {
   }
   const xpNeed = config.xpToNext();
   el.xpFill.style.width = `${(state.xp / xpNeed) * 100}%`;
+  el.xpFill.classList.toggle('xp-bursting', !el.xpBurst.classList.contains('hidden'));
   el.xpLabel.textContent = `XP ${state.xp}/${xpNeed}  •  Level ${state.level}`;
   el.healthFill.style.width = `${(state.health / config.maxHealth()) * 100}%`;
   el.healthLabel.textContent = `Health ${Math.round(state.health)}/${config.maxHealth()}`;

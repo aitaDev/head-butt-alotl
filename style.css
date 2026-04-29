@@ -30,14 +30,20 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 input[type="range"] { width: 180px; }
 .small { font-size: 13px; color: #9fb4d0; }
 #hud {
-  position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 5; pointer-events: none;
-  display: grid; gap: 8px;
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 5; pointer-events: none;
+  display: grid; gap: 8px; width: min(560px, 86vw);
 }
-.topbar { position: fixed; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; z-index: 5; pointer-events: none; }
+#healthHud {
+  position: fixed; top: 16px; left: 16px; z-index: 6; pointer-events: none; width: min(320px, 42vw);
+}
+.hud-title { font-size: 10px; margin-bottom: 8px; color: #ffef9a; text-shadow: 2px 2px 0 #000; }
+.topbar { position: fixed; top: 16px; left: 360px; right: 16px; display: flex; justify-content: space-between; z-index: 5; pointer-events: none; }
 .card { background: rgba(5,15,30,0.7); border: 1px solid rgba(160,210,255,0.2); padding: 10px 12px; border-radius: 12px; backdrop-filter: blur(8px); }
 .bar { height: 18px; background: rgba(255,255,255,0.09); border-radius: 999px; overflow: hidden; position: relative; }
 .fill { height: 100%; width: 0%; transition: width 0.15s linear; }
 #xpFill { background: linear-gradient(90deg, #ffd166, #ff7b7b); }
+#xpFill.xp-bursting { filter: brightness(1.35); box-shadow: 0 0 18px #ffd166; }
+.xp-bar-shell { border: 3px solid #ffd166; box-shadow: 0 0 18px rgba(255, 209, 102, 0.25); }
 #healthFill { background: linear-gradient(90deg, #59ffa0, #00b36b); width: 100%; }
 .barLabel { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; text-shadow: 0 1px 2px #000; }
 #crosshair { position: fixed; inset: 50% auto auto 50%; width: 12px; height: 12px; transform: translate(-50%, -50%); z-index: 4; pointer-events: none; opacity: 0.45; }
@@ -46,6 +52,30 @@ input[type="range"] { width: 180px; }
 #crosshair::after { height: 2px; width: 12px; top: 5px; }
 #notice { position: fixed; left: 50%; top: 84px; transform: translateX(-50%); z-index: 6; background: rgba(5,15,30,0.92); border: 3px solid #8bd8ff; border-radius: 4px; padding: 10px 16px; color: #d7f1ff; opacity: 0; transition: opacity 0.2s; font-size: 10px; line-height: 1.5; text-align: center; }
 #notice.show { opacity: 1; }
+#xpBurst, #levelUpFlash {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 35;
+  pointer-events: none;
+  text-shadow: 3px 3px 0 #000;
+  animation: popFlash 0.45s ease-out infinite alternate;
+}
+#xpBurst {
+  bottom: 70px;
+  color: #ffe066;
+  font-size: 16px;
+}
+#levelUpFlash {
+  top: 22%;
+  color: #fff3a3;
+  font-size: 26px;
+  letter-spacing: 2px;
+}
+@keyframes popFlash {
+  from { transform: translateX(-50%) scale(1); opacity: 0.9; }
+  to { transform: translateX(-50%) scale(1.08); opacity: 1; }
+}
 .damage-number {
   position: fixed;
   transform: translate(-50%, -50%) scale(0.8);
