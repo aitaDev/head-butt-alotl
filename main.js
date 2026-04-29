@@ -99,10 +99,7 @@ app.innerHTML = `
     <div class="panel">
       <h2>Whale Wisdom</h2>
       <p class="subtitle" id="whaleDialogText">Please help protect the ocean. Trash, oil, plastic, and poison spread everywhere. Clean water means life for all of us.</p>
-      <div class="menu-buttons">
-        <button id="closeWhaleChatBtn">I Understand</button>
-        <div class="small">Hit space to continue</div>
-      </div>
+      <div class="small space-continue">🟨 ␣ Hit space to continue</div>
     </div>
   </div>
 
@@ -110,20 +107,14 @@ app.innerHTML = `
     <div class="panel">
       <h2>How To Swim</h2>
       <p class="subtitle">W move forward, S back, A left, D right, move mouse to aim, Shift sprint, U upgrades, Esc pause.</p>
-      <div class="menu-buttons">
-        <button id="closeTutorialBtn">Start Swimming</button>
-        <div class="small">Hit space to continue</div>
-      </div>
+      <div class="small space-continue">🟨 ␣ Hit space to continue</div>
     </div>
   </div>
 
   <div id="storyMenu" class="overlay hidden">
     <div class="panel" style="max-width:520px;text-align:center">
       <p id="storyText" style="font-size:15px;line-height:1.75;color:#d7f1ff;margin-bottom:24px"></p>
-      <div class="menu-buttons">
-        <button id="closeStoryBtn">Continue</button>
-      </div>
-      <div class="small" id="storyHint" style="margin-top:10px">Hit space to continue</div>
+      <div class="small space-continue" id="storyHint" style="margin-top:10px">🟨 ␣ Hit space to continue</div>
     </div>
   </div>
   <div id="mainMenu" class="overlay">
@@ -1509,6 +1500,21 @@ function prepareNewGame() {
   el.continueBtn.disabled = false;
 }
 
+function continueWhaleDialog() {
+  paused = false;
+  openOverlay(null);
+  renderer.domElement.requestPointerLock();
+}
+
+function continueTutorial() {
+  unlockAudio();
+  audio.menu.currentTime = 0;
+  audio.menu.play().catch(() => {});
+  paused = false;
+  openOverlay(null);
+  renderer.domElement.requestPointerLock();
+}
+
 function advanceStory() {
   storyIndex++;
   if (storyIndex >= storyParagraphs.length) {
@@ -1555,7 +1561,7 @@ document.addEventListener('keydown', e => {
   }
   if (!el.whaleChatMenu.classList.contains('hidden') && e.code === 'Space') {
     e.preventDefault();
-    el.closeWhaleChatBtn.click();
+    continueWhaleDialog();
     return;
   }
   if (!el.storyMenu.classList.contains('hidden') && (e.code === 'Space' || e.key === ' ' || e.key === 'Enter')) {
@@ -1564,9 +1570,7 @@ document.addEventListener('keydown', e => {
   }
   if (!el.tutorialMenu.classList.contains('hidden') && (e.code === 'Space' || e.key === ' ' || e.key === 'Enter')) {
     e.preventDefault();
-    paused = false;
-    openOverlay(null);
-    renderer.domElement.requestPointerLock();
+    continueTutorial();
     return;
   }
   keys.add(e.code);
@@ -1595,9 +1599,7 @@ document.addEventListener('keyup', e => {
     return;
   }
   if (!el.tutorialMenu.classList.contains('hidden') && (e.code === 'Space' || e.key === ' ' || e.key === 'Enter')) {
-    paused = false;
-    openOverlay(null);
-    renderer.domElement.requestPointerLock();
+    continueTutorial();
   }
 });
 renderer.domElement.addEventListener('click', () => {
@@ -1619,9 +1621,6 @@ el.closeUpgradeBtn.onclick = () => openOverlay('pauseMenu');
 el.quitBtn.onclick = quitToTitle;
 el.retryBtn.onclick = () => { unlockAudio(); startGame(false); };
 el.gameOverTitleBtn.onclick = quitToTitle;
-el.closeWhaleChatBtn.onclick = () => { paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
-el.closeStoryBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); advanceStory(); };
-el.closeTutorialBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
 el.graphicsDown.onclick = () => setGraphics(-1);
 el.graphicsUp.onclick = () => setGraphics(1);
 el.soundSlider.oninput = e => { data.options.sound = Number(e.target.value); persist(); renderOptions(); };
