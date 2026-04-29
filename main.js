@@ -73,6 +73,8 @@ const config = {
   xpToNext: () => 50 + (state.level - 1) * 35
 };
 
+const hostileSpeedMultiplier = 10;
+
 const upgradesMeta = [
   { key: 'fins', name: 'Better Fins', desc: 'Swim faster through the pond.', cost: lvl => 20 + lvl * 18 },
   { key: 'head', name: 'Bigger Stronger Head', desc: 'Bonk aliens harder for faster takedowns.', cost: lvl => 25 + lvl * 22 },
@@ -1149,7 +1151,7 @@ function updateAnglerfish(dt, now) {
     }
 
     if (dist > 0.001) {
-      af.mesh.position.addScaledVector(toPlayer.normalize(), chaseSpeed * dt);
+      af.mesh.position.addScaledVector(toPlayer.normalize(), chaseSpeed * hostileSpeedMultiplier * dt);
       af.mesh.lookAt(player.pos);
     }
 
@@ -1805,7 +1807,7 @@ function updateAliens(dt, now) {
     const alien = aliens[i];
     const toPlayer = player.pos.clone().sub(alien.mesh.position);
     const dist = toPlayer.length();
-    if (dist > 0.001) alien.mesh.position.addScaledVector(toPlayer.normalize(), alien.speed * dt);
+    if (dist > 0.001) alien.mesh.position.addScaledVector(toPlayer.normalize(), alien.speed * hostileSpeedMultiplier * dt);
     alien.bob += dt * (1.2 + alien.scale * 0.2);
     alien.mesh.position.y += Math.sin(alien.bob) * 0.01 * alien.scale;
     alien.mesh.lookAt(player.pos);
@@ -1920,7 +1922,7 @@ function updateLeviathans(dt, now) {
     const toPlayer = player.pos.clone().sub(leviathan.mesh.position);
     const dist = toPlayer.length();
     if (dist < 40) nearLeviathan = true;
-    if (dist > 0.001) leviathan.mesh.position.addScaledVector(toPlayer.normalize(), leviathan.speed * dt);
+    if (dist > 0.001) leviathan.mesh.position.addScaledVector(toPlayer.normalize(), leviathan.speed * hostileSpeedMultiplier * dt);
     leviathan.mesh.lookAt(player.pos);
   }
   if (nearLeviathan) {
@@ -1942,7 +1944,7 @@ function updateSharks(dt, now) {
     if (shark.mesh.position.y - player.pos.y < -45) shark.mesh.position.y += 90;
     const toPlayer = player.pos.clone().sub(shark.mesh.position);
     const dist = toPlayer.length();
-    if (dist > 0.001) shark.mesh.position.addScaledVector(toPlayer.normalize(), shark.speed * dt);
+    if (dist > 0.001) shark.mesh.position.addScaledVector(toPlayer.normalize(), shark.speed * hostileSpeedMultiplier * dt);
     shark.bob += dt * 2.8;
     shark.mesh.position.y += Math.sin(shark.bob) * 0.02;
     shark.mesh.lookAt(player.pos);
@@ -2262,8 +2264,8 @@ function updateSeabedCreatures(dt, now) {
     crab.mesh.position.y = -83.5 + Math.sin(crab.bob) * 0.04;
     crab.wanderAngle += dt * 0.5;
     crab.mesh.rotation.y = crab.wanderAngle;
-    crab.mesh.position.x += Math.cos(crab.wanderAngle) * crab.speed * dt * 0.6;
-    crab.mesh.position.z += Math.sin(crab.wanderAngle) * crab.speed * dt * 0.6;
+    crab.mesh.position.x += Math.cos(crab.wanderAngle) * crab.speed * hostileSpeedMultiplier * dt * 0.6;
+    crab.mesh.position.z += Math.sin(crab.wanderAngle) * crab.speed * hostileSpeedMultiplier * dt * 0.6;
     if (crab.hitCooldown > 0) crab.hitCooldown -= dt;
     const dx = crab.mesh.position.x - player.pos.x;
     const dz = crab.mesh.position.z - player.pos.z;
