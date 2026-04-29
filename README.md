@@ -1,6 +1,6 @@
-# Axolotl Alien Fighter
+# Head-Butt-Alotl
 
-A small 3D first-person browser game where an axolotl headbutts aliens in a pond, eats worms and rare steak for XP, and buys upgrades.
+A small 3D browser game where an axolotl headbutts aliens in a pond, eats worms and rare steak for XP, and buys upgrades.
 
 ## Run
 

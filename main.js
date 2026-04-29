@@ -63,7 +63,7 @@ app.innerHTML = `
 <div id="ui">
   <div id="mainMenu" class="overlay">
     <div class="panel">
-      <h1 class="title">Axolotl Alien Fighter</h1>
+      <h1 class="title">Head-Butt-Alotl</h1>
       <p class="subtitle">Save the pond by headbutting alien invaders and gobbling worms for power.</p>
       <div class="menu-buttons">
         <button id="newGameBtn">New Game</button>
@@ -239,6 +239,7 @@ axEyeR.position.set(1.52, 0.26, -0.23);
 axSmile.position.set(1.74, -0.02, 0);
 axSmile.rotation.y = Math.PI / 2;
 axolotl.add(axBody, axHead, axTail, axFinL, axFinR, axGillL, axGillR, axEyeL, axEyeR, axSmile);
+axolotl.rotation.y = -Math.PI / 2;
 scene.add(axolotl);
 
 const cameraTarget = new THREE.Vector3();
