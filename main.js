@@ -690,9 +690,9 @@ document.addEventListener('pointerlockchange', () => {
 
 document.addEventListener('mousemove', e => {
   if (!pointerLocked || paused) return;
-  player.yaw -= e.movementX * 0.0023;
-  player.pitch -= e.movementY * 0.0021;
-  player.pitch = Math.max(-1.3, Math.min(1.3, player.pitch));
+  player.yaw -= e.movementX * 0.0028;
+  player.pitch -= e.movementY * 0.0028;
+  player.pitch = Math.max(-1.45, Math.min(1.45, player.pitch));
 });
 
 document.addEventListener('keydown', e => {
@@ -775,7 +775,7 @@ function updatePlayer(dt) {
   }
 
   const lookVertical = Math.sin(player.pitch);
-  const verticalIntent = moveInput.y > 0.05 ? lookVertical : moveInput.y < -0.05 ? -lookVertical * 0.65 : 0;
+  const verticalIntent = moveInput.y !== 0 ? lookVertical * Math.sign(moveInput.y) : 0;
   const desiredVelocity = new THREE.Vector3(flatDir.x, 0, flatDir.z);
 
   const holdingForward = moveInput.y > 0.05;
@@ -791,7 +791,7 @@ function updatePlayer(dt) {
     player.velocity.z *= Math.max(0.9, 1 - dt * 2.6);
   }
 
-  player.verticalVelocity = THREE.MathUtils.lerp(player.verticalVelocity, verticalIntent * config.moveSpeed() * Math.min(2, player.forwardBoost), Math.min(0.65, dt * config.verticalAccel()));
+  player.verticalVelocity = verticalIntent * config.moveSpeed() * Math.min(2.2, player.forwardBoost);
 
   player.pos.x += player.velocity.x * dt;
   player.pos.z += player.velocity.z * dt;
@@ -821,7 +821,7 @@ function updatePlayer(dt) {
   }
   const swimSpeed = Math.min(3.2, 0.6 + player.velocity.length() * 0.25);
   const swimPhase = performance.now() * 0.006 * swimSpeed;
-  axolotl.rotation.x = THREE.MathUtils.lerp(axolotl.rotation.x, player.pitch * 0.28, 0.12);
+  axolotl.rotation.x = player.pitch * 0.28;
   axolotl.rotation.z = Math.sin(swimPhase) * 0.05;
   axBody.position.y = Math.sin(swimPhase * 0.7) * 0.08;
   axHead.position.y = 0.06 + Math.sin(swimPhase * 0.7 + 0.4) * 0.05;
@@ -840,9 +840,10 @@ function updatePlayer(dt) {
     camera.position.copy(desiredCameraPos);
     cameraSnapNextFrame = false;
   } else {
-    camera.position.lerp(desiredCameraPos, 0.1);
+    camera.position.lerp(desiredCameraPos, 0.22);
   }
-  camera.lookAt(cameraTarget.clone().add(new THREE.Vector3(0, player.pitch * 1.2, 0)));
+  const lookTarget = cameraTarget.clone().add(new THREE.Vector3(-Math.sin(player.yaw) * 8, Math.sin(player.pitch) * 8, -Math.cos(player.yaw) * 8));
+  camera.lookAt(lookTarget);
   renderer.setClearColor(player.pos.y > -10 ? 0x7ed0ff : 0x1676d2);
 
   water.position.x = player.pos.x;
