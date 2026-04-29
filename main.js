@@ -2,8 +2,9 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 
 const app = document.getElementById('app');
 const saveKey = 'axolotl-alien-fighter-save';
-const gameVersion = 'v0.3.0';
+const gameVersion = 'v0.3.1';
 const patchNotes = [
+  'v0.3.1  Fixed tutorial dismissal, restored whale interaction radius, added solid collisions, and corrected shark facing.',
   'v0.3.0  Upgrades visibly change axolotl, new creatures: jellyfish/seahorses/orbs/anemones, bubble particles, animated kelp, bioluminescent glow, lore tablets, light rays, treasure chests.',
   'v0.2.0  Added menu patch notes, version tag, flashier XP UI, and bigger coral pass.',
   'v0.1.9  Added user audio loops and ambient sound hooks.',
