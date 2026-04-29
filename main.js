@@ -113,6 +113,16 @@ app.innerHTML = `
       </div>
     </div>
   </div>
+
+  <div id="storyMenu" class="overlay hidden">
+    <div class="panel" style="max-width:520px;text-align:center">
+      <p id="storyText" style="font-size:15px;line-height:1.75;color:#d7f1ff;margin-bottom:24px"></p>
+      <div class="menu-buttons">
+        <button id="closeStoryBtn">Continue</button>
+      </div>
+      <div class="small" id="storyHint" style="margin-top:10px">Hit space to continue</div>
+    </div>
+  </div>
   <div id="mainMenu" class="overlay">
     <div class="panel">
       <h1 class="title">Head-Butt-Alotl</h1>
@@ -206,6 +216,15 @@ app.innerHTML = `
 </div>`;
 
 const el = Object.fromEntries([...document.querySelectorAll('[id]')].map(node => [node.id, node]));
+const storyParagraphs = [
+  'Axo was just a weird little pond creature with a thick skull and no plans beyond snacks and floating around.',
+  'Then the newcomers showed up. Not fish, not frogs, definitely not friendly. They oozed in from the dark and started warping the water.',
+  'Plants twisted. Creatures changed. The whole pond got meaner, stranger, and way louder than anybody asked for.',
+  'Most things hid. Axo did not. Axo discovered a sacred truth: if your head is hard enough, problems can be solved by swimming directly into them.',
+  'Now the pond is full of invaders, hungry wildlife, and ancient nonsense lurking below the surface.',
+  'Good thing Axo was built for chaos. Bonk first, ask questions never.'
+];
+let storyIndex = 0;
 
 function loadData() {
   try {
@@ -1442,7 +1461,7 @@ function setGraphics(delta) {
 }
 
 function openOverlay(id) {
-  for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu', 'patchNotesMenu', 'tutorialMenu']) el[key].classList.add('hidden');
+  for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu', 'patchNotesMenu', 'tutorialMenu', 'storyMenu']) el[key].classList.add('hidden');
   if (id) el[id].classList.remove('hidden');
 }
 
@@ -1465,6 +1484,32 @@ function startGame(continueGame = false) {
   renderUpgradeMenu();
   continueAllowed = true;
   el.continueBtn.disabled = false;
+}
+
+function prepareNewGame() {
+  resetState();
+  state.health = Math.min(config.maxHealth(), state.health || config.maxHealth());
+  player.pos.set(0, -18, 0);
+  player.verticalVelocity = 0;
+  paused = true;
+  isGameOver = false;
+  gameStarted = true;
+  persist();
+  refreshAxolotlVisuals();
+  updateHUD();
+  renderUpgradeMenu();
+  continueAllowed = true;
+  el.continueBtn.disabled = false;
+}
+
+function advanceStory() {
+  storyIndex++;
+  if (storyIndex >= storyParagraphs.length) {
+    storyIndex = 0;
+    openOverlay('tutorialMenu');
+  } else {
+    el.storyText.textContent = storyParagraphs[storyIndex];
+  }
 }
 
 function quitToTitle() {
@@ -1506,6 +1551,10 @@ document.addEventListener('keydown', e => {
     el.closeWhaleChatBtn.click();
     return;
   }
+  if (!el.storyMenu.classList.contains('hidden') && (e.code === 'Space' || e.key === ' ' || e.key === 'Enter')) {
+    e.preventDefault();
+    return;
+  }
   if (!el.tutorialMenu.classList.contains('hidden') && (e.code === 'Space' || e.key === ' ' || e.key === 'Enter')) {
     e.preventDefault();
     paused = false;
@@ -1534,6 +1583,10 @@ document.addEventListener('keydown', e => {
 
 document.addEventListener('keyup', e => {
   keys.delete(e.code);
+  if (!el.storyMenu.classList.contains('hidden') && (e.code === 'Space' || e.key === ' ' || e.key === 'Enter')) {
+    advanceStory();
+    return;
+  }
   if (!el.tutorialMenu.classList.contains('hidden') && (e.code === 'Space' || e.key === ' ' || e.key === 'Enter')) {
     paused = false;
     openOverlay(null);
@@ -1545,7 +1598,7 @@ renderer.domElement.addEventListener('click', () => {
   if (gameStarted && !pointerLocked && !paused) renderer.domElement.requestPointerLock();
 });
 
-el.newGameBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); startGame(false); paused = true; openOverlay('tutorialMenu'); };
+el.newGameBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); prepareNewGame(); storyIndex = 0; el.storyText.textContent = storyParagraphs[0]; openOverlay('storyMenu'); };
 el.continueBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); continueAllowed && startGame(true); };
 el.continueBtn.disabled = !continueAllowed;
 el.optionsBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); renderOptions(); openOverlay('optionsMenu'); };
@@ -1560,6 +1613,7 @@ el.quitBtn.onclick = quitToTitle;
 el.retryBtn.onclick = () => { unlockAudio(); startGame(false); };
 el.gameOverTitleBtn.onclick = quitToTitle;
 el.closeWhaleChatBtn.onclick = () => { paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
+el.closeStoryBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); advanceStory(); };
 el.closeTutorialBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
 el.graphicsDown.onclick = () => setGraphics(-1);
 el.graphicsUp.onclick = () => setGraphics(1);
