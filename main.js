@@ -608,7 +608,7 @@ function makeAlien() {
   const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -72 + Math.random() * 62, Math.sin(a) * r);
   scene.add(group);
-  aliens.push({ mesh: group, hp: (38 + state.level * 9) * scale * 1.8 * type.hp, speed: Math.max(0.35, type.speed - scale * 0.12) + Math.random() * 0.35, bob: Math.random() * Math.PI * 2, scale, damage: 6 * scale * type.damage, kind: type.name });
+  aliens.push({ mesh: group, hp: (38 + state.level * 9) * scale * 1.8 * type.hp, speed: Math.max(0.35, type.speed - scale * 0.12) + Math.random() * 0.35, bob: Math.random() * Math.PI * 2, scale, damage: 6 * scale * type.damage, kind: type.name, collisionRadius: 1.2 * scale });
 }
 
 function makePickup(kind = Math.random() < 0.12 ? 'steak' : Math.random() < 0.45 ? 'fish' : 'worm') {
@@ -665,7 +665,8 @@ function makePickup(kind = Math.random() < 0.12 ? 'steak' : Math.random() < 0.45
   group.position.set(Math.cos(a) * r, -76 + Math.random() * 68, Math.sin(a) * r);
   group.rotation.set(Math.random(), Math.random(), Math.random());
   scene.add(group);
-  pickups.push({ mesh: group, kind, spin: (Math.random() - 0.5) * 1.4 });
+  const collisionRadius = kind === 'steak' ? 1.1 : kind === 'fish' ? 0.95 : 0.7;
+  pickups.push({ mesh: group, kind, spin: (Math.random() - 0.5) * 1.4, collisionRadius });
 }
 
 function spawnRipple(position, color = 0xffffff) {
@@ -715,7 +716,7 @@ function makeNarwhal() {
   const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -55 + Math.random() * 35, Math.sin(a) * r);
   scene.add(group);
-  narwhals.push({ mesh: group, activeUntil: 0, following: false, bob: Math.random() * Math.PI * 2 });
+  narwhals.push({ mesh: group, activeUntil: 0, following: false, bob: Math.random() * Math.PI * 2, collisionRadius: 4.5 });
 }
 
 function makeLeviathan() {
@@ -763,7 +764,7 @@ function makeShark() {
   const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -60 + Math.random() * 40, Math.sin(a) * r);
   scene.add(group);
-  sharks.push({ mesh: group, speed: 2 + Math.random() * 1.5, damage: 18 + Math.random() * 12, bob: Math.random() * Math.PI * 2, hp: 85 + Math.random() * 45, hitCooldown: 0 });
+  sharks.push({ mesh: group, speed: 2 + Math.random() * 1.5, damage: 18 + Math.random() * 12, bob: Math.random() * Math.PI * 2, hp: 85 + Math.random() * 45, hitCooldown: 0, collisionRadius: 3.2 });
 }
 
 function makeOctopus() {
@@ -985,7 +986,7 @@ function showNotice(text) {
 
 function updateHUD() {
   if (audioUnlocked) {
-    if (player.pos.distanceTo(whale.position) < 18) {
+    if (player.pos.distanceTo(whale.position) < 120) {
       if (audio.whale.paused) audio.whale.play().catch(() => {});
     } else {
       audio.whale.pause();
@@ -1000,7 +1001,7 @@ function updateHUD() {
   el.healthLabel.textContent = `Health ${Math.round(state.health)}/${config.maxHealth()}`;
   el.currency.textContent = state.currency;
   el.aliensBonked.textContent = state.stats.aliensBonked;
-  if (player.pos.distanceTo(whale.position) < 14 && performance.now() > whaleChatCooldownUntil && !paused) {
+  if (player.pos.distanceTo(whale.position) < 115 && performance.now() > whaleChatCooldownUntil && !paused) {
     paused = true;
     whaleChatCooldownUntil = performance.now() + 120000;
     openOverlay('whaleChatMenu');
@@ -1347,7 +1348,7 @@ function updateAliens(dt, now) {
     alien.mesh.position.y += Math.sin(alien.bob) * 0.01 * alien.scale;
     alien.mesh.lookAt(player.pos);
 
-    if (dist < 1.8) {
+    if (dist < (alien.collisionRadius + player.radius)) {
       if (!alien.hitCooldown || now - alien.hitCooldown > 120) {
         const damageMultiplier = narwhalBuffUntil > performance.now() ? 2 : 1;
         const ram = player.velocity.length() * config.ramPower() * 0.18 * damageMultiplier;
@@ -1387,7 +1388,7 @@ function updatePickups(dt) {
     p.mesh.rotation.y += dt * p.spin;
     p.mesh.position.y += Math.sin(performance.now() * 0.002 + i) * 0.01;
     const dist = p.mesh.position.distanceTo(player.pos);
-    if (dist < config.pickupRadius()) {
+    if (dist < (config.pickupRadius() + p.collisionRadius * 0.5)) {
       scene.remove(p.mesh);
       pickups.splice(i, 1);
       if (p.kind === 'steak') {
@@ -1422,7 +1423,7 @@ function updateNarwhals(dt) {
       narwhal.mesh.lookAt(player.pos);
     }
     narwhal.mesh.position.y += Math.sin(narwhal.bob) * 0.02;
-    if (!narwhal.following && narwhal.mesh.position.distanceTo(player.pos) < 4) {
+    if (!narwhal.following && narwhal.mesh.position.distanceTo(player.pos) < narwhal.collisionRadius) {
       narwhal.following = true;
       narwhal.activeUntil = performance.now() + 60000;
       narwhalBuffUntil = narwhal.activeUntil;
@@ -1473,7 +1474,7 @@ function updateSharks(dt, now) {
     shark.mesh.position.y += Math.sin(shark.bob) * 0.02;
     shark.mesh.lookAt(player.pos);
     shark.mesh.rotation.y += Math.PI / 2;
-    if (dist < 2.6) {
+    if (dist < (shark.collisionRadius + player.radius)) {
       if (!shark.hitCooldown || now - shark.hitCooldown > 120) {
         const damageMultiplier = narwhalBuffUntil > performance.now() ? 2 : 1;
         const ram = player.velocity.length() * config.ramPower() * 0.16 * damageMultiplier;
