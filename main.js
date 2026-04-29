@@ -49,6 +49,7 @@ let gameStarted = false;
 let paused = true;
 let pointerLocked = false;
 let rebinding = null;
+let lastDamageCause = 'your own bad decisions';
 
 const state = {
   xp: data.save.xp,
@@ -1155,7 +1156,7 @@ function updateAnglerfish(dt, now) {
     // Contact damage
     if (dist < af.collisionRadius + player.radius) {
       if (af.hitCooldown <= 0) {
-        takeDamage(af.damage * dt);
+        takeDamage(af.damage * dt, 'an anglerfish');
         af.hitCooldown = 0.4;
         spawnRipple(af.mesh.position, af.lureColor || 0x00ffcc);
         // Push player away slightly
@@ -1171,7 +1172,9 @@ function updateAnglerfish(dt, now) {
     if (dist < af.collisionRadius + player.radius && player.velocity.length() > 2.5) {
       const dmgMult = narwhalBuffUntil > performance.now() ? 2 : 1;
       const ram = player.velocity.length() * config.ramPower() * 0.16 * dmgMult;
-      const crit = player.velocity.length() > config.moveSpeed() * 1.8;
+      const sprintingCrit = player.sprinting && Math.random() < 0.5;
+      const movingCrit = !player.sprinting && player.velocity.length() > 2.5 && Math.random() < 0.25;
+      const crit = sprintingCrit || movingCrit;
       af.hp -= crit ? ram * 1.5 : ram;
       spawnDamageText(af.mesh.position, crit ? ram * 1.5 : ram, crit);
       if (crit) { screenShake.intensity = 0.4; screenShake.duration = 0.2; }
@@ -1327,18 +1330,19 @@ function addXp(amount) {
   }
 }
 
-function takeDamage(amount) {
+function takeDamage(amount, cause = null) {
+  if (cause) lastDamageCause = cause;
   state.health = Math.max(0, state.health - amount);
   if (state.health <= 0 && !isGameOver) {
     isGameOver = true;
     paused = true;
     pointerLocked = false;
     const captions = [
-      'you found out huh?',
-      'the deep remembered you first.',
-      'something down here was watching.',
-      'you swam too close to the truth.',
-      'the ocean keeps what it learns.'
+      `You got folded by ${lastDamageCause}. Skill issue, honestly.`,
+      `${lastDamageCause} sent you to the horny jail of the deep.`,
+      `Cause of death: ${lastDamageCause}. That pond spanked you stupid.`,
+      `You got absolutely wrecked by ${lastDamageCause}. Respectfully pathetic.`,
+      `${lastDamageCause} turned your little swim into an adults-only cautionary tale.`
     ];
     el.gameOverCaption.textContent = captions[Math.floor(Math.random() * captions.length)];
     audio.gameOver.currentTime = 0;
@@ -1384,6 +1388,7 @@ function updateHUD() {
   el.xpFill.classList.toggle('xp-bursting', !el.xpBurst.classList.contains('hidden'));
   el.xpLabel.textContent = `XP ${state.xp}/${xpNeed}  •  Level ${state.level}`;
   el.healthFill.style.width = `${(state.health / config.maxHealth()) * 100}%`;
+  el.healthFill.classList.toggle('sprint-flash', !!player.sprinting);
   el.healthLabel.textContent = `Health ${Math.round(state.health)}/${config.maxHealth()}`;
   el.currency.textContent = state.currency;
   el.aliensBonked.textContent = state.stats.aliensBonked;
@@ -1708,7 +1713,7 @@ function updatePlayer(dt) {
     }
   }
   if (sprintPressed && desiredVelocity.lengthSq() > 0) {
-    takeDamage(dt * config.sprintDrain());
+    takeDamage(dt * config.sprintDrain(), 'sprinting too hard like a maniac');
   }
 
   axolotl.position.copy(player.pos);
@@ -1810,7 +1815,9 @@ function updateAliens(dt, now) {
       if (!alien.hitCooldown || now - alien.hitCooldown > 120) {
         const damageMultiplier = narwhalBuffUntil > performance.now() ? 2 : 1;
         const ram = player.velocity.length() * config.ramPower() * 0.18 * damageMultiplier;
-        const crit = player.velocity.length() > config.moveSpeed() * 1.8;
+        const sprintingCrit = player.sprinting && Math.random() < 0.5;
+        const movingCrit = !player.sprinting && player.velocity.length() > 0.8 && Math.random() < 0.25;
+        const crit = sprintingCrit || movingCrit;
         const dealt = crit ? ram * 1.5 : ram;
         alien.hp -= dealt;
         killed = alien.hp <= 0;
@@ -1827,7 +1834,7 @@ function updateAliens(dt, now) {
       if (!killed) {
         resolveSolidCollision(player.pos, alien.mesh.position, alien.collisionRadius + player.radius);
       }
-      takeDamage(alien.damage * dt + 5 * (1 - Math.min(1, player.velocity.length() / (4 + state.upgrades.head))) * dt);
+      takeDamage(alien.damage * dt + 5 * (1 - Math.min(1, player.velocity.length() / (4 + state.upgrades.head))) * dt, `${alien.type || 'some weird'} alien nonsense`);
       if (alien.hp <= 0) {
         scene.remove(alien.mesh);
         aliens.splice(i, 1);
@@ -1945,7 +1952,9 @@ function updateSharks(dt, now) {
       if (!shark.hitCooldown || now - shark.hitCooldown > 120) {
         const damageMultiplier = narwhalBuffUntil > performance.now() ? 2 : 1;
         const ram = player.velocity.length() * config.ramPower() * 0.16 * damageMultiplier;
-        const crit = player.velocity.length() > config.moveSpeed() * 1.9;
+        const sprintingCrit = player.sprinting && Math.random() < 0.5;
+        const movingCrit = !player.sprinting && player.velocity.length() > 0.8 && Math.random() < 0.25;
+        const crit = sprintingCrit || movingCrit;
         const dealt = crit ? ram * 1.5 : ram;
         shark.hp -= dealt;
         killed = shark.hp <= 0;
@@ -1960,7 +1969,7 @@ function updateSharks(dt, now) {
       if (!killed) {
         resolveSolidCollision(player.pos, shark.mesh.position, shark.collisionRadius + player.radius);
       }
-      takeDamage(shark.damage * dt);
+      takeDamage(shark.damage * dt, 'a shark');
       if (shark.hp <= 0) {
         scene.remove(shark.mesh);
         sharks.splice(i, 1);
@@ -2241,7 +2250,7 @@ function updateSeabedCreatures(dt, now) {
     if (dist < 1.8 + player.radius) {
       resolveSolidCollision(player.pos, urchin.mesh.position, 1.8 + player.radius);
       if (urchin.hitCooldown <= 0) {
-        takeDamage(4 * dt);
+        takeDamage(4 * dt, 'a sea urchin');
         urchin.hitCooldown = 0.5;
       }
     }
@@ -2264,7 +2273,7 @@ function updateSeabedCreatures(dt, now) {
     if (dist < 1.5 + player.radius) {
       resolveSolidCollision(player.pos, crab.mesh.position, 1.5 + player.radius);
       if (crab.hitCooldown <= 0) {
-        takeDamage(3 * dt);
+        takeDamage(3 * dt, 'a crab with attitude');
         crab.hitCooldown = 0.4;
         crab.wanderAngle = Math.random() * Math.PI * 2;
       }
