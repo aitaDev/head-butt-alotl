@@ -136,7 +136,7 @@ input[type="range"] { width: 180px; }
 .keybind { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin: 10px 0; }
 .keybtn.listening { outline: 2px solid #ffd166; }
 .depth-card {
-  position: fixed; right: 16px; top: 16px; z-index: 6; pointer-events: none;
+  position: fixed; right: 16px; bottom: 16px; z-index: 6; pointer-events: none;
   width: 80px; text-align: center; padding: 10px 8px;
 }
 .depth-label { font-size: 9px; color: #a7d8ff; text-shadow: 1px 1px 0 #000; margin-bottom: 6px; }
