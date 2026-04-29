@@ -13,6 +13,7 @@ const defaults = {
       backward: 'KeyS',
       left: 'KeyA',
       right: 'KeyD',
+      jump: 'Space',
       upgrades: 'KeyU',
       pause: 'Escape'
     }
@@ -48,7 +49,9 @@ const config = {
   ramPower: () => 18 + state.upgrades.head * 6,
   maxHealth: () => 100 + state.upgrades.lungs * 20,
   pickupRadius: () => 1.4 + state.upgrades.bite * 0.25,
-  accel: () => 3.8 + state.upgrades.fins * 0.45,
+  accel: () => 5.8 + state.upgrades.fins * 0.6,
+  verticalAccel: () => 10,
+  jumpStrength: () => 7.5 + state.upgrades.fins * 0.4,
   xpToNext: () => 50 + (state.level - 1) * 35
 };
 
@@ -212,33 +215,40 @@ const player = {
   yaw: 0,
   pitch: 0,
   velocity: new THREE.Vector3(),
-  radius: 1.2
+  radius: 1.2,
+  verticalVelocity: 0
 };
 
 const axolotl = new THREE.Group();
-const axBody = new THREE.Mesh(new THREE.CapsuleGeometry(0.7, 1.8, 6, 12), new THREE.MeshStandardMaterial({ color: 0xff9ecf, roughness: 0.7 }));
-const axHead = new THREE.Mesh(new THREE.SphereGeometry(0.75, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffadd7, roughness: 0.7 }));
-const axTail = new THREE.Mesh(new THREE.ConeGeometry(0.38, 1.5, 10), new THREE.MeshStandardMaterial({ color: 0xf58cbc, roughness: 0.7 }));
-const axFinL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.9, 0.7), new THREE.MeshStandardMaterial({ color: 0xff74b6, transparent: true, opacity: 0.8 }));
-const axFinR = axFinL.clone();
-const axGillL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.55, 0.7), new THREE.MeshStandardMaterial({ color: 0xff5ca8, transparent: true, opacity: 0.85 }));
+const axBody = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.9, 1.1), new THREE.MeshStandardMaterial({ color: 0xff9ecf, roughness: 0.85 }));
+const axBodyStripe = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.2, 1.12), new THREE.MeshStandardMaterial({ color: 0xf58cbc, roughness: 0.9 }));
+const axHead = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.95, 1.05), new THREE.MeshStandardMaterial({ color: 0xffadd7, roughness: 0.8 }));
+const axMouth = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.08, 0.5), new THREE.MeshBasicMaterial({ color: 0x7a3050 }));
+const axTail = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.45, 0.75), new THREE.MeshStandardMaterial({ color: 0xf58cbc, roughness: 0.8 }));
+const axTailTip = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 0.45), new THREE.MeshStandardMaterial({ color: 0xffbddf, roughness: 0.85 }));
+const axLegFL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.35), new THREE.MeshStandardMaterial({ color: 0xff8fca }));
+const axLegFR = axLegFL.clone();
+const axLegBL = axLegFL.clone();
+const axLegBR = axLegFL.clone();
+const axGillL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.7, 0.95), new THREE.MeshStandardMaterial({ color: 0xff5ca8, transparent: true, opacity: 0.9 }));
 const axGillR = axGillL.clone();
-const axEyeL = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+const axEyeL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.12), new THREE.MeshBasicMaterial({ color: 0x111111 }));
 const axEyeR = axEyeL.clone();
-const axSmile = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.03, 6, 18, Math.PI), new THREE.MeshBasicMaterial({ color: 0x7a3050 }));
-axBody.rotation.z = Math.PI / 2;
-axHead.position.set(1.15, 0.1, 0);
-axTail.position.set(-1.45, 0.02, 0);
-axTail.rotation.z = -Math.PI / 2;
-axFinL.position.set(0, -0.25, 0.72);
-axFinR.position.set(0, -0.25, -0.72);
-axGillL.position.set(0.95, 0.45, 0.78);
-axGillR.position.set(0.95, 0.45, -0.78);
-axEyeL.position.set(1.52, 0.26, 0.23);
-axEyeR.position.set(1.52, 0.26, -0.23);
-axSmile.position.set(1.74, -0.02, 0);
-axSmile.rotation.y = Math.PI / 2;
-axolotl.add(axBody, axHead, axTail, axFinL, axFinR, axGillL, axGillR, axEyeL, axEyeR, axSmile);
+axBody.position.set(0, 0, 0);
+axBodyStripe.position.set(0.1, 0.12, 0);
+axHead.position.set(1.4, 0.06, 0);
+axMouth.position.set(1.92, -0.12, 0);
+axTail.position.set(-1.42, -0.02, 0);
+axTailTip.position.set(-2.12, -0.02, 0);
+axLegFL.position.set(0.6, -0.42, 0.42);
+axLegFR.position.set(0.6, -0.42, -0.42);
+axLegBL.position.set(-0.5, -0.42, 0.42);
+axLegBR.position.set(-0.5, -0.42, -0.42);
+axGillL.position.set(1.05, 0.22, 0.92);
+axGillR.position.set(1.05, 0.22, -0.92);
+axEyeL.position.set(1.8, 0.22, 0.24);
+axEyeR.position.set(1.8, 0.22, -0.24);
+axolotl.add(axBody, axBodyStripe, axHead, axMouth, axTail, axTailTip, axLegFL, axLegFR, axLegBL, axLegBR, axGillL, axGillR, axEyeL, axEyeR);
 scene.add(axolotl);
 
 const cameraTarget = new THREE.Vector3();
@@ -257,22 +267,30 @@ const worldWrapRadius = 70;
 
 function makeAlien() {
   const group = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.9, 18, 18), new THREE.MeshStandardMaterial({ color: 0x8cf07d, emissive: 0x245d1b, roughness: 0.35, metalness: 0.15 }));
-  const shell = new THREE.Mesh(new THREE.TorusGeometry(0.88, 0.12, 10, 24), new THREE.MeshStandardMaterial({ color: 0xc9ff9f, emissive: 0x355d10, transparent: true, opacity: 0.65 }));
-  shell.rotation.x = Math.PI / 2;
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.6, 1.4, 6, 12), new THREE.MeshStandardMaterial({ color: 0x88d66f, emissive: 0x214d15, roughness: 0.45, metalness: 0.08 }));
+  const belly = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.0, 0.55), new THREE.MeshStandardMaterial({ color: 0xb8f29a, roughness: 0.7 }));
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.72, 16, 16), new THREE.MeshStandardMaterial({ color: 0x8cf07d, emissive: 0x245d1b, roughness: 0.35, metalness: 0.15 }));
   const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), new THREE.MeshBasicMaterial({ color: 0x111111 }));
   const eye2 = eye1.clone();
   const pupil1 = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff4d4d }));
   const pupil2 = pupil1.clone();
-  eye1.position.set(-0.25, 0.18, 0.7); eye2.position.set(0.25, 0.18, 0.7);
-  pupil1.position.set(-0.25, 0.18, 0.83); pupil2.position.set(0.25, 0.18, 0.83);
+  const armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.12, 0.65, 4, 8), new THREE.MeshStandardMaterial({ color: 0x7ecb68 }));
+  const armR = armL.clone();
+  const legL = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.75, 4, 8), new THREE.MeshStandardMaterial({ color: 0x72be5d }));
+  const legR = legL.clone();
   const horn = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.6, 8), new THREE.MeshStandardMaterial({ color: 0xb8ffb0, emissive: 0x274611 }));
   const horn2 = horn.clone();
-  horn.position.set(-0.28, 0.85, 0.12);
-  horn2.position.set(0.28, 0.85, 0.12);
   const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.03, 6, 18, Math.PI), new THREE.MeshBasicMaterial({ color: 0x365421 }));
-  mouth.position.set(0, -0.18, 0.82);
-  group.add(body, shell, eye1, eye2, pupil1, pupil2, horn, horn2, mouth);
+  head.position.set(0, 0.7, 0);
+  belly.position.set(0, -0.05, 0.38);
+  eye1.position.set(-0.25, 0.82, 0.55); eye2.position.set(0.25, 0.82, 0.55);
+  pupil1.position.set(-0.25, 0.82, 0.68); pupil2.position.set(0.25, 0.82, 0.68);
+  armL.position.set(-0.6, 0.08, 0); armR.position.set(0.6, 0.08, 0);
+  legL.position.set(-0.28, -0.98, 0); legR.position.set(0.28, -0.98, 0);
+  armL.rotation.z = 0.65; armR.rotation.z = -0.65;
+  horn.position.set(-0.28, 1.38, 0.12); horn2.position.set(0.28, 1.38, 0.12);
+  mouth.position.set(0, 0.42, 0.62);
+  group.add(body, belly, head, eye1, eye2, pupil1, pupil2, armL, armR, legL, legR, horn, horn2, mouth);
   const r = 20 + Math.random() * 42;
   const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -1.5 + Math.random() * 3, Math.sin(a) * r);
@@ -412,7 +430,7 @@ function renderOptions() {
   el.soundSlider.value = data.options.sound;
   el.musicSlider.value = data.options.music;
   el.keybindList.innerHTML = '';
-  const labels = { forward: 'Forward', backward: 'Backward', left: 'Left', right: 'Right', upgrades: 'Upgrades', pause: 'Pause' };
+  const labels = { forward: 'Forward', backward: 'Backward', left: 'Left', right: 'Right', jump: 'Surface Jump', upgrades: 'Upgrades', pause: 'Pause' };
   for (const [key, code] of Object.entries(data.options.keybinds)) {
     const row = document.createElement('div');
     row.className = 'keybind';
@@ -537,6 +555,7 @@ function updatePlayer(dt) {
     (keys.has(data.options.keybinds.right) ? 1 : 0) - (keys.has(data.options.keybinds.left) ? 1 : 0),
     (keys.has(data.options.keybinds.forward) ? 1 : 0) - (keys.has(data.options.keybinds.backward) ? 1 : 0)
   );
+  const jumpPressed = keys.has(data.options.keybinds.jump);
 
   const flatForward = new THREE.Vector3(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
   const right = new THREE.Vector3(flatForward.z, 0, -flatForward.x);
@@ -550,22 +569,41 @@ function updatePlayer(dt) {
 
   const lookVertical = Math.sin(player.pitch);
   const verticalIntent = moveInput.y > 0.05 ? lookVertical : moveInput.y < -0.05 ? -lookVertical * 0.65 : 0;
-  const desiredVelocity = new THREE.Vector3(
-    flatDir.x,
-    verticalIntent,
-    flatDir.z
-  );
+  const desiredVelocity = new THREE.Vector3(flatDir.x, 0, flatDir.z);
 
   if (desiredVelocity.lengthSq() > 0) desiredVelocity.normalize().multiplyScalar(config.moveSpeed() * (keys.has('Mouse0') ? 1.45 : 1));
-  player.velocity.lerp(desiredVelocity, Math.min(0.16, dt * config.accel()));
-  if (!desiredVelocity.lengthSq()) player.velocity.multiplyScalar(Math.max(0.93, 1 - dt * 1.8));
-  player.pos.addScaledVector(player.velocity, dt);
+  player.velocity.x = THREE.MathUtils.lerp(player.velocity.x, desiredVelocity.x, Math.min(0.22, dt * config.accel()));
+  player.velocity.z = THREE.MathUtils.lerp(player.velocity.z, desiredVelocity.z, Math.min(0.22, dt * config.accel()));
+  if (!desiredVelocity.lengthSq()) {
+    player.velocity.x *= Math.max(0.9, 1 - dt * 2.6);
+    player.velocity.z *= Math.max(0.9, 1 - dt * 2.6);
+  }
+
+  const nearSurface = player.pos.y > -1.2;
+  const wantsSurfaceJump = jumpPressed && nearSurface;
+  if (wantsSurfaceJump) {
+    player.verticalVelocity = config.jumpStrength();
+  } else {
+    player.verticalVelocity = THREE.MathUtils.lerp(player.verticalVelocity, verticalIntent * config.moveSpeed(), Math.min(0.45, dt * config.verticalAccel()));
+  }
+  if (player.pos.y > -0.4 || player.verticalVelocity > 0) player.verticalVelocity -= 14 * dt;
+
+  player.pos.x += player.velocity.x * dt;
+  player.pos.z += player.velocity.z * dt;
+  player.pos.y += player.verticalVelocity * dt;
 
   if (player.pos.x > worldWrapRadius) player.pos.x = -worldWrapRadius;
   if (player.pos.x < -worldWrapRadius) player.pos.x = worldWrapRadius;
   if (player.pos.z > worldWrapRadius) player.pos.z = -worldWrapRadius;
   if (player.pos.z < -worldWrapRadius) player.pos.z = worldWrapRadius;
-  player.pos.y = Math.max(-8.5, Math.min(4.5, player.pos.y));
+  if (player.pos.y < -8.5) {
+    player.pos.y = -8.5;
+    player.verticalVelocity = Math.max(0, player.verticalVelocity);
+  }
+  if (player.pos.y > 5.8) {
+    player.pos.y = 5.8;
+    player.verticalVelocity = Math.min(0, player.verticalVelocity);
+  }
 
   axolotl.position.copy(player.pos);
   if (player.velocity.lengthSq() > 0.001) {
@@ -573,14 +611,17 @@ function updatePlayer(dt) {
   } else {
     axolotl.rotation.y = player.yaw + Math.PI / 2;
   }
-  axolotl.rotation.x = THREE.MathUtils.lerp(axolotl.rotation.x, player.pitch * 0.35, 0.08);
-  axolotl.rotation.z = Math.sin(performance.now() * 0.006) * 0.08;
+  axolotl.rotation.x = THREE.MathUtils.lerp(axolotl.rotation.x, player.pitch * 0.28, 0.12);
+  axolotl.rotation.z = Math.sin(performance.now() * 0.006) * 0.05;
   axTail.rotation.y = Math.sin(performance.now() * 0.01) * 0.45;
-  axFinL.rotation.x = Math.sin(performance.now() * 0.012) * 0.35;
-  axFinR.rotation.x = -Math.sin(performance.now() * 0.012) * 0.35;
+  axTailTip.rotation.y = Math.sin(performance.now() * 0.014) * 0.55;
+  axLegFL.rotation.z = 0.18 + Math.sin(performance.now() * 0.014) * 0.12;
+  axLegFR.rotation.z = -0.18 - Math.sin(performance.now() * 0.014) * 0.12;
+  axLegBL.rotation.z = 0.1 - Math.sin(performance.now() * 0.014) * 0.1;
+  axLegBR.rotation.z = -0.1 + Math.sin(performance.now() * 0.014) * 0.1;
 
   cameraOffset.set(Math.sin(player.yaw) * 6.8, 2.5 - Math.sin(player.pitch) * 1.2, Math.cos(player.yaw) * 6.8);
-  cameraTarget.copy(player.pos).add(new THREE.Vector3(0, 1.15, 0));
+  cameraTarget.copy(player.pos).add(new THREE.Vector3(0, 0.7, 0));
   camera.position.lerp(cameraTarget.clone().add(cameraOffset), 0.1);
   camera.lookAt(cameraTarget.clone().add(new THREE.Vector3(0, player.pitch * 1.2, 0)));
 
