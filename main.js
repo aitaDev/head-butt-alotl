@@ -2,8 +2,9 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 
 const app = document.getElementById('app');
 const saveKey = 'axolotl-alien-fighter-save';
-const gameVersion = 'v0.3.4';
+const gameVersion = 'v0.3.5';
 const patchNotes = [
+  'v0.3.5  Anglerfish lurking in the deep — glowing lures, aggressive hunting in dark waters, pulsing bioluminescence.',
   'v0.3.4  Seabed creatures now live: urchins spike on contact, crabs scuttle and deal damage, starfish are collectible with respawn.',
   'v0.3.3  HP bar flashes red while sprinting, screen shake on critical headbutts.',
   'v0.3.2  Halved whale size, added whale swimming movement, and restored menu button sound triggers.',
@@ -515,6 +516,7 @@ const tentacles = [];
 const depthZones = [];
 const pearls = [];
 const planktonPatches = [];
+const anglerfish = [];
 let screenShake = { intensity: 0, duration: 0, offsetX: 0, offsetY: 0 };
 const moteGroup = new THREE.Group();
 scene.add(moteGroup);
@@ -1015,6 +1017,157 @@ function makeKraken() {
   tentacles.push({ mesh, segs, baseAngle, phase: Math.random() * Math.PI * 2 });
 }
 
+function makeAnglerfish() {
+  const group = new THREE.Group();
+  const bodyColor = 0x1a1a2e;
+  // Main body — elongated and deep
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.6, 1.6),
+    new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.85 }));
+  const head = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.3, 1.3),
+    new THREE.MeshStandardMaterial({ color: 0x22223a, roughness: 0.8 }));
+  const jaw = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 1.1),
+    new THREE.MeshStandardMaterial({ color: 0x2a2a4a, roughness: 0.75 }));
+  const belly = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.5, 1.2),
+    new THREE.MeshStandardMaterial({ color: 0x4a3a5a, roughness: 0.9 }));
+  const dorsal = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.9, 0.12),
+    new THREE.MeshStandardMaterial({ color: 0x2a2a3e }));
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.9),
+    new THREE.MeshStandardMaterial({ color: bodyColor }));
+  const finL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.1, 0.35),
+    new THREE.MeshStandardMaterial({ color: 0x1e1e30 }));
+  const finR = finL.clone();
+  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 5),
+    new THREE.MeshBasicMaterial({ color: 0xffee44 }));
+  const eyeR = eyeL.clone();
+
+  // Glowing lure stalk + light
+  const stalk = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.4, 0.06),
+    new THREE.MeshStandardMaterial({ color: 0x334455 }));
+  const lureColor = Math.random() < 0.5 ? 0x00ffcc : Math.random() < 0.5 ? 0xff66ff : 0x44ffaa;
+  const lure = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8),
+    new THREE.MeshStandardMaterial({ color: lureColor, emissive: lureColor, emissiveIntensity: 2.2, transparent: true, opacity: 0.85 }));
+  const lureHalo = new THREE.Mesh(new THREE.SphereGeometry(0.38, 8, 8),
+    new THREE.MeshBasicMaterial({ color: lureColor, transparent: true, opacity: 0.12 }));
+
+  // Teeth
+  for (let t = 0; t < 6; t++) {
+    const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.18, 0.06),
+      new THREE.MeshStandardMaterial({ color: 0xeef5ff, roughness: 0.3, metalness: 0.4 }));
+    tooth.position.set(0.7 + t * 0.12, -0.12, (t % 2 ? 1 : -1) * 0.28);
+    group.add(tooth);
+  }
+
+  group.add(body, head, jaw, belly, dorsal, tail, finL, finR, eyeL, eyeR, stalk, lure, lureHalo);
+
+  body.position.set(0, 0, 0);
+  head.position.set(2.0, 0.1, 0);
+  jaw.position.set(2.9, -0.28, 0);
+  belly.position.set(0.2, -0.6, 0);
+  dorsal.position.set(-0.5, 0.95, 0);
+  tail.position.set(-1.7, 0, 0);
+  finL.position.set(0.2, 0, 0.8); finL.rotation.z = 0.4;
+  finR.position.set(0.2, 0, -0.8); finR.rotation.z = -0.4;
+  eyeL.position.set(2.3, 0.32, 0.38); eyeR.position.set(2.3, 0.32, -0.38);
+  stalk.position.set(1.8, 1.1, 0);
+  lure.position.set(1.8, 1.95, 0);
+  lureHalo.position.set(1.8, 1.95, 0);
+
+  const r = 35 + Math.random() * 55;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -68 + Math.random() * 30, Math.sin(a) * r);
+  group.rotation.y = Math.random() * Math.PI * 2;
+  scene.add(group);
+  anglerfish.push({ mesh: group, lureMesh: lure, lureHalo, lureColor,
+    speed: 2.5 + Math.random() * 1.8, damage: 14 + Math.random() * 8,
+    hp: 55 + Math.random() * 35, bob: Math.random() * Math.PI * 2,
+    hitCooldown: 0, collisionRadius: 3.0, huntTimer: 0, lurePhase: Math.random() * Math.PI * 2 });
+}
+
+function updateAnglerfish(dt, now) {
+  for (let i = anglerfish.length - 1; i >= 0; i--) {
+    const af = anglerfish[i];
+    // Recycle around player
+    const dx = af.mesh.position.x - player.pos.x;
+    const dz = af.mesh.position.z - player.pos.z;
+    if (Math.abs(dx) > worldRadius || Math.abs(dz) > worldRadius) {
+      const r = 30 + Math.random() * 50;
+      const a = Math.random() * Math.PI * 2;
+      af.mesh.position.x = player.pos.x + Math.cos(a) * r;
+      af.mesh.position.z = player.pos.z + Math.sin(a) * r;
+      af.mesh.position.y = -68 + Math.random() * 30;
+    }
+
+    af.bob += dt * 2.2;
+    af.lurePhase += dt * 1.4;
+    af.mesh.position.y += Math.sin(af.bob) * 0.015;
+
+    // Pulse the lure
+    const lureIntensity = 1.8 + Math.sin(af.lurePhase * 2.5) * 0.8;
+    af.lureMesh.material.emissiveIntensity = lureIntensity;
+    af.lureHalo.material.opacity = 0.08 + Math.sin(af.lurePhase * 2) * 0.06;
+
+    // Hunt: if player is in deep water and within range, chase aggressively
+    const toPlayer = player.pos.clone().sub(af.mesh.position);
+    const dist = toPlayer.length();
+    const isDeep = player.pos.y < -45;
+
+    if (dist < 45 && isDeep) {
+      af.huntTimer = Math.min(af.huntTimer + dt, 3.0);
+    } else {
+      af.huntTimer = Math.max(af.huntTimer - dt * 0.5, 0);
+    }
+
+    let chaseSpeed = af.speed * 0.4; // slow patrol by default
+    if (af.huntTimer > 0.5 && isDeep) {
+      chaseSpeed = af.speed * (0.5 + af.huntTimer * 0.4); // ramp up chase
+    }
+
+    if (dist > 0.001) {
+      af.mesh.position.addScaledVector(toPlayer.normalize(), chaseSpeed * dt);
+      af.mesh.lookAt(player.pos);
+    }
+
+    // Contact damage
+    if (dist < af.collisionRadius + player.radius) {
+      if (af.hitCooldown <= 0) {
+        takeDamage(af.damage * dt);
+        af.hitCooldown = 0.4;
+        spawnRipple(af.mesh.position, af.lureColor || 0x00ffcc);
+        // Push player away slightly
+        const pushDir = player.pos.clone().sub(af.mesh.position).normalize();
+        player.pos.addScaledVector(pushDir, dt * 3);
+      } else {
+        af.hitCooldown -= dt;
+      }
+      resolveSolidCollision(player.pos, af.mesh.position, af.collisionRadius + player.radius);
+    }
+
+    // Take damage when rammed by player
+    if (dist < af.collisionRadius + player.radius && player.velocity.length() > 2.5) {
+      const dmgMult = narwhalBuffUntil > performance.now() ? 2 : 1;
+      const ram = player.velocity.length() * config.ramPower() * 0.16 * dmgMult;
+      const crit = player.velocity.length() > config.moveSpeed() * 1.8;
+      af.hp -= crit ? ram * 1.5 : ram;
+      spawnDamageText(af.mesh.position, crit ? ram * 1.5 : ram, crit);
+      if (crit) { screenShake.intensity = 0.4; screenShake.duration = 0.2; }
+      spawnRipple(af.mesh.position, af.lureColor || 0x00ffcc);
+      audio.eat.currentTime = 0;
+      audio.eat.play().catch(() => {});
+    }
+
+    if (af.hp <= 0) {
+      scene.remove(af.mesh);
+      anglerfish.splice(i, 1);
+      state.currency += 22;
+      addXp(28);
+      spawnRipple(af.mesh.position, af.lureColor || 0x00ffcc);
+      showNotice('🐟 Anglerfish defeated! Deep sea champion! +28 XP');
+      setTimeout(() => { if (gameStarted && anglerfish.length < 2) makeAnglerfish(); }, 8000);
+      continue;
+    }
+  }
+}
+
 function makePearl() {
   const colors = [0xfff4e8, 0xffe8f4, 0xe8f4ff, 0xfff8e8, 0xf4ffe8];
   const color = colors[Math.floor(Math.random() * colors.length)];
@@ -1127,6 +1280,7 @@ for (let i = 0; i < 7; i++) makeCrab();
 for (let i = 0; i < 9; i++) makeStarfish();
 for (let i = 0; i < 6; i++) makeCrystal();
 for (let i = 0; i < 4; i++) makeKraken();
+for (let i = 0; i < 2; i++) makeAnglerfish();
 for (let i = 0; i < 10; i++) makePearl();
 for (let i = 0; i < 8; i++) makePlanktonPatch();
 makeDepthZones();
@@ -1842,6 +1996,7 @@ function animate(now) {
     updateAliens(dt, now);
     updateNarwhals(dt);
     updateLeviathans(dt, now);
+    updateAnglerfish(dt, now);
     updateSharks(dt, now);
     updatePickups(dt);
     for (const octo of octopi) {
