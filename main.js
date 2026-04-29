@@ -321,6 +321,7 @@ const pickups = [];
 const sharks = [];
 const octopi = [];
 const narwhals = [];
+const floatingTexts = [];
 const ripples = [];
 const keys = new Set();
 let lastTime = performance.now();
@@ -440,13 +441,14 @@ function spawnDamageText(position, amount, crit = false) {
   elText.className = `damage-number${crit ? ' crit' : ''}`;
   elText.textContent = `${crit ? 'CRIT ' : ''}-${Math.max(1, Math.round(amount))}`;
   document.getElementById('ui').appendChild(elText);
-  const screen = position.clone().project(camera);
-  const x = (screen.x * 0.5 + 0.5) * innerWidth;
-  const y = (-screen.y * 0.5 + 0.5) * innerHeight;
-  elText.style.left = `${x}px`;
-  elText.style.top = `${y}px`;
+  floatingTexts.push({
+    el: elText,
+    worldPos: position.clone().add(new THREE.Vector3(0, 1.2, 0)),
+    velocity: new THREE.Vector3((Math.random() - 0.5) * 0.2, 1.6, (Math.random() - 0.5) * 0.2),
+    life: 0.95,
+    crit
+  });
   requestAnimationFrame(() => elText.classList.add('show'));
-  setTimeout(() => elText.remove(), 950);
 }
 
 function makeNarwhal() {
@@ -936,6 +938,25 @@ function updateSharks(dt) {
   }
 }
 
+function updateFloatingTexts(dt) {
+  for (let i = floatingTexts.length - 1; i >= 0; i--) {
+    const text = floatingTexts[i];
+    text.life -= dt;
+    text.worldPos.addScaledVector(text.velocity, dt);
+    text.velocity.y += 0.35 * dt;
+    const screen = text.worldPos.clone().project(camera);
+    const x = (screen.x * 0.5 + 0.5) * innerWidth;
+    const y = (-screen.y * 0.5 + 0.5) * innerHeight;
+    text.el.style.left = `${x}px`;
+    text.el.style.top = `${y}px`;
+    text.el.style.opacity = `${Math.max(0, Math.min(1, text.life * 1.4))}`;
+    if (text.life <= 0 || screen.z > 1.2) {
+      text.el.remove();
+      floatingTexts.splice(i, 1);
+    }
+  }
+}
+
 function updateRipples(dt) {
   for (let i = ripples.length - 1; i >= 0; i--) {
     const r = ripples[i];
@@ -964,6 +985,7 @@ function animate(now) {
       octo.bob += dt * 1.5;
       octo.mesh.position.y = -82 + Math.sin(octo.bob) * 0.5;
     }
+    updateFloatingTexts(dt);
     updateRipples(dt);
     persist();
     updateHUD();
