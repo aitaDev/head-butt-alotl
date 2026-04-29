@@ -1125,9 +1125,11 @@ document.addEventListener('keydown', e => {
     el.closeWhaleChatBtn.click();
     return;
   }
-  if (!el.tutorialMenu.classList.contains('hidden') && e.code === 'Space') {
+  if (!el.tutorialMenu.classList.contains('hidden') && (e.code === 'Space' || e.key === ' ' || e.key === 'Enter')) {
     e.preventDefault();
-    el.closeTutorialBtn.click();
+    paused = false;
+    openOverlay(null);
+    renderer.domElement.requestPointerLock();
     return;
   }
   keys.add(e.code);
@@ -1149,7 +1151,14 @@ document.addEventListener('keydown', e => {
   }
 });
 
-document.addEventListener('keyup', e => keys.delete(e.code));
+document.addEventListener('keyup', e => {
+  keys.delete(e.code);
+  if (!el.tutorialMenu.classList.contains('hidden') && (e.code === 'Space' || e.key === ' ' || e.key === 'Enter')) {
+    paused = false;
+    openOverlay(null);
+    renderer.domElement.requestPointerLock();
+  }
+});
 renderer.domElement.addEventListener('click', () => {
   unlockAudio();
   if (gameStarted && !pointerLocked && !paused) renderer.domElement.requestPointerLock();
@@ -1170,7 +1179,7 @@ el.quitBtn.onclick = quitToTitle;
 el.retryBtn.onclick = () => { unlockAudio(); startGame(false); };
 el.gameOverTitleBtn.onclick = quitToTitle;
 el.closeWhaleChatBtn.onclick = () => { paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
-el.closeTutorialBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
+el.closeTutorialBtn.onclick = () => { paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
 el.graphicsDown.onclick = () => setGraphics(-1);
 el.graphicsUp.onclick = () => setGraphics(1);
 el.soundSlider.oninput = e => { data.options.sound = Number(e.target.value); persist(); renderOptions(); };
