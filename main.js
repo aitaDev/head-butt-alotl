@@ -977,6 +977,18 @@ function updatePlayer(dt) {
     if (reed.position.z - player.pos.z > worldRadius) reed.position.z -= worldRadius * 2;
     if (reed.position.z - player.pos.z < -worldRadius) reed.position.z += worldRadius * 2;
   }
+  for (const coralPiece of coral) {
+    if (coralPiece.position.x - player.pos.x > worldRadius) coralPiece.position.x -= worldRadius * 2;
+    if (coralPiece.position.x - player.pos.x < -worldRadius) coralPiece.position.x += worldRadius * 2;
+    if (coralPiece.position.z - player.pos.z > worldRadius) coralPiece.position.z -= worldRadius * 2;
+    if (coralPiece.position.z - player.pos.z < -worldRadius) coralPiece.position.z += worldRadius * 2;
+  }
+  for (const shell of shells) {
+    if (shell.position.x - player.pos.x > worldRadius) shell.position.x -= worldRadius * 2;
+    if (shell.position.x - player.pos.x < -worldRadius) shell.position.x += worldRadius * 2;
+    if (shell.position.z - player.pos.z > worldRadius) shell.position.z -= worldRadius * 2;
+    if (shell.position.z - player.pos.z < -worldRadius) shell.position.z += worldRadius * 2;
+  }
 }
 
 document.addEventListener('mousedown', e => { if (e.button === 0) keys.add('Mouse0'); });
