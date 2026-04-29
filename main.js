@@ -315,6 +315,7 @@ scene.add(axolotl);
 
 const cameraTarget = new THREE.Vector3();
 const cameraOffset = new THREE.Vector3();
+let cameraSnapNextFrame = false;
 
 const aliens = [];
 const pickups = [];
@@ -779,10 +780,10 @@ function updatePlayer(dt) {
   player.pos.z += player.velocity.z * dt;
   player.pos.y += player.verticalVelocity * dt;
 
-  if (player.pos.x > worldWrapRadius) player.pos.x = -worldWrapRadius;
-  if (player.pos.x < -worldWrapRadius) player.pos.x = worldWrapRadius;
-  if (player.pos.z > worldWrapRadius) player.pos.z = -worldWrapRadius;
-  if (player.pos.z < -worldWrapRadius) player.pos.z = worldWrapRadius;
+  if (player.pos.x > worldWrapRadius) { player.pos.x = -worldWrapRadius; cameraSnapNextFrame = true; }
+  if (player.pos.x < -worldWrapRadius) { player.pos.x = worldWrapRadius; cameraSnapNextFrame = true; }
+  if (player.pos.z > worldWrapRadius) { player.pos.z = -worldWrapRadius; cameraSnapNextFrame = true; }
+  if (player.pos.z < -worldWrapRadius) { player.pos.z = worldWrapRadius; cameraSnapNextFrame = true; }
   if (player.pos.y < -82) {
     player.pos.y = -82;
     player.verticalVelocity = Math.max(0, player.verticalVelocity);
@@ -817,7 +818,13 @@ function updatePlayer(dt) {
   cameraOffset.set(Math.sin(player.yaw) * 7.4, 2.8 - Math.sin(player.pitch) * 1.2, Math.cos(player.yaw) * 7.4);
   cameraTarget.copy(player.pos).add(new THREE.Vector3(0, 0.7, 0));
   scene.fog.color.set(player.pos.y > -10 ? 0x5cbcff : 0x0b5ea8);
-  camera.position.lerp(cameraTarget.clone().add(cameraOffset), 0.1);
+  const desiredCameraPos = cameraTarget.clone().add(cameraOffset);
+  if (cameraSnapNextFrame) {
+    camera.position.copy(desiredCameraPos);
+    cameraSnapNextFrame = false;
+  } else {
+    camera.position.lerp(desiredCameraPos, 0.1);
+  }
   camera.lookAt(cameraTarget.clone().add(new THREE.Vector3(0, player.pitch * 1.2, 0)));
   renderer.setClearColor(player.pos.y > -10 ? 0x7ed0ff : 0x1676d2);
 
