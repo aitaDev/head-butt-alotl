@@ -215,6 +215,45 @@ for (let i = 0; i < 120; i++) {
   scene.add(reed);
 }
 
+const coral = [];
+for (let i = 0; i < 45; i++) {
+  const group = new THREE.Group();
+  const colors = [0xff7aa2, 0xff9966, 0xa66cff, 0xffcc66];
+  for (let j = 0; j < 4; j++) {
+    const branch = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.18, 1.2 + Math.random() * 1.4, 6),
+      new THREE.MeshStandardMaterial({ color: colors[(i + j) % colors.length], roughness: 0.85 })
+    );
+    branch.position.set((j - 1.5) * 0.25, branch.geometry.parameters.height / 2, (Math.random() - 0.5) * 0.35);
+    branch.rotation.z = (Math.random() - 0.5) * 0.6;
+    group.add(branch);
+  }
+  const r = 15 + Math.random() * 80;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -83, Math.sin(a) * r);
+  coral.push(group);
+  scene.add(group);
+}
+
+const whale = new THREE.Group();
+const whaleBody = new THREE.Mesh(new THREE.CapsuleGeometry(3.2, 9, 8, 16), new THREE.MeshStandardMaterial({ color: 0x4a6f96, roughness: 0.8 }));
+const whaleHead = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.6, 2.8), new THREE.MeshStandardMaterial({ color: 0x5d84aa, roughness: 0.75 }));
+const whaleTailL = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.18, 1.5), new THREE.MeshStandardMaterial({ color: 0x486b90 }));
+const whaleTailR = whaleTailL.clone();
+const whaleFinL = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.15, 0.8), new THREE.MeshStandardMaterial({ color: 0x3e6186 }));
+const whaleFinR = whaleFinL.clone();
+whaleBody.rotation.z = Math.PI / 2;
+whaleHead.position.set(5.2, 0.15, 0);
+whaleTailL.position.set(-5.8, 0.45, 1.1);
+whaleTailR.position.set(-5.8, 0.45, -1.1);
+whaleTailL.rotation.y = 0.45;
+whaleTailR.rotation.y = -0.45;
+whaleFinL.position.set(0.4, -1.1, 1.8);
+whaleFinR.position.set(0.4, -1.1, -1.8);
+whale.add(whaleBody, whaleHead, whaleTailL, whaleTailR, whaleFinL, whaleFinR);
+whale.position.set(18, -38, -10);
+scene.add(whale);
+
 const stars = new THREE.Group();
 for (let i = 0; i < 120; i++) {
   const p = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), new THREE.MeshBasicMaterial({ color: 0xb8ffb0 }));
@@ -270,6 +309,8 @@ const cameraOffset = new THREE.Vector3();
 
 const aliens = [];
 const pickups = [];
+const sharks = [];
+const octopi = [];
 const ripples = [];
 const keys = new Set();
 let lastTime = performance.now();
@@ -334,7 +375,7 @@ function makeAlien() {
   aliens.push({ mesh: group, hp: (18 + state.level * 5) * scale * 1.3 * type.hp, speed: Math.max(0.35, type.speed - scale * 0.12) + Math.random() * 0.35, bob: Math.random() * Math.PI * 2, scale, damage: 6 * scale * type.damage, kind: type.name });
 }
 
-function makePickup(kind = Math.random() < 0.22 ? 'steak' : 'worm') {
+function makePickup(kind = Math.random() < 0.12 ? 'steak' : Math.random() < 0.45 ? 'fish' : 'worm') {
   const group = new THREE.Group();
   if (kind === 'steak') {
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.55, 0.7), new THREE.MeshStandardMaterial({ color: 0xa52f2f, roughness: 0.32, metalness: 0.08 }));
@@ -349,6 +390,14 @@ function makePickup(kind = Math.random() < 0.22 ? 'steak' : 'worm') {
     const shine = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.08), new THREE.MeshStandardMaterial({ color: 0xffeee6, emissive: 0x663333, roughness: 0.05, metalness: 0.2 }));
     shine.position.set(-0.06, 0.1, -0.18);
     group.add(base, fat, marbling1, marbling2, shine);
+  } else if (kind === 'fish') {
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 12), new THREE.MeshStandardMaterial({ color: 0x5cc8ff, roughness: 0.55 }));
+    body.scale.set(1.6, 1, 0.8);
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.18, 0.45), new THREE.MeshStandardMaterial({ color: 0x88e0ff }));
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.08), new THREE.MeshStandardMaterial({ color: 0xb8f2ff }));
+    tail.position.set(-0.45, 0, 0);
+    fin.position.set(0, 0.24, 0);
+    group.add(body, tail, fin);
   } else {
     const body = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
       new THREE.Vector3(-0.32, 0, 0),
@@ -380,8 +429,46 @@ function spawnRipple(position, color = 0xffffff) {
   ripples.push({ mesh, life: 0.7 });
 }
 
+function makeShark() {
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.7, 3.5, 6, 14), new THREE.MeshStandardMaterial({ color: 0x6f8897, roughness: 0.7 }));
+  const fin = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1.0, 6), new THREE.MeshStandardMaterial({ color: 0x5b7280 }));
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.1, 1.1), new THREE.MeshStandardMaterial({ color: 0x698391 }));
+  const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.25, 0.8), new THREE.MeshStandardMaterial({ color: 0xe9e9e9 }));
+  body.rotation.z = Math.PI / 2;
+  fin.position.set(0.1, 0.9, 0);
+  tail.position.set(-2.5, 0, 0);
+  jaw.position.set(2.1, -0.25, 0);
+  group.add(body, fin, tail, jaw);
+  const r = 20 + Math.random() * 75;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -60 + Math.random() * 40, Math.sin(a) * r);
+  scene.add(group);
+  sharks.push({ mesh: group, speed: 2 + Math.random() * 1.5, damage: 18 + Math.random() * 12, bob: Math.random() * Math.PI * 2 });
+}
+
+function makeOctopus() {
+  const group = new THREE.Group();
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 14, 14), new THREE.MeshStandardMaterial({ color: 0xa45bff, roughness: 0.8 }));
+  for (let i = 0; i < 8; i++) {
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.12, 1.8, 6), new THREE.MeshStandardMaterial({ color: 0x8b47dd, roughness: 0.85 }));
+    const angle = (i / 8) * Math.PI * 2;
+    arm.position.set(Math.cos(angle) * 0.35, -1.0, Math.sin(angle) * 0.35);
+    arm.rotation.z = (Math.random() - 0.5) * 0.6;
+    group.add(arm);
+  }
+  group.add(head);
+  const r = 12 + Math.random() * 90;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -82, Math.sin(a) * r);
+  scene.add(group);
+  octopi.push({ mesh: group, bob: Math.random() * Math.PI * 2 });
+}
+
 for (let i = 0; i < 5; i++) makeAlien();
 for (let i = 0; i < 10; i++) makePickup();
+for (let i = 0; i < 4; i++) makeShark();
+for (let i = 0; i < 10; i++) makeOctopus();
 
 function addXp(amount) {
   state.xp += amount;
@@ -433,6 +520,9 @@ function updateHUD() {
   el.healthLabel.textContent = `Health ${Math.round(state.health)}/${config.maxHealth()}`;
   el.currency.textContent = state.currency;
   el.aliensBonked.textContent = state.stats.aliensBonked;
+  if (player.pos.distanceTo(whale.position) < 14) {
+    showNotice('🐋 Keep the oceans clean. Pollution hurts every creature down here, and it all flows back to us.');
+  }
 }
 
 function renderUpgradeMenu() {
@@ -742,12 +832,33 @@ function updatePickups(dt) {
         state.currency += 10;
         state.health = Math.min(config.maxHealth(), state.health + 10);
         showNotice('Rare steak! Big XP boost');
+      } else if (p.kind === 'fish') {
+        addXp(10);
+        state.currency += 4;
+        state.health = Math.min(config.maxHealth(), state.health + 4);
+        showNotice('You snapped up a fish');
       } else {
         state.stats.wormsEaten += 1;
         addXp(6);
         state.currency += 2;
       }
       spawnRipple(player.pos, p.kind === 'steak' ? 0xff7f7f : 0xffd27d);
+    }
+  }
+}
+
+function updateSharks(dt) {
+  for (let i = sharks.length - 1; i >= 0; i--) {
+    const shark = sharks[i];
+    const toPlayer = player.pos.clone().sub(shark.mesh.position);
+    const dist = toPlayer.length();
+    if (dist > 0.001) shark.mesh.position.addScaledVector(toPlayer.normalize(), shark.speed * dt);
+    shark.bob += dt * 2.8;
+    shark.mesh.position.y += Math.sin(shark.bob) * 0.02;
+    shark.mesh.lookAt(player.pos);
+    if (dist < 2.6) {
+      takeDamage(shark.damage * dt);
+      spawnRipple(shark.mesh.position, 0xff6666);
     }
   }
 }
@@ -773,7 +884,12 @@ function animate(now) {
   if (!paused && gameStarted) {
     updatePlayer(dt);
     updateAliens(dt);
+    updateSharks(dt);
     updatePickups(dt);
+    for (const octo of octopi) {
+      octo.bob += dt * 1.5;
+      octo.mesh.position.y = -82 + Math.sin(octo.bob) * 0.5;
+    }
     updateRipples(dt);
     persist();
     updateHUD();
