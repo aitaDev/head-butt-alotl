@@ -470,9 +470,11 @@ function spawnRipple(position, color = 0xffffff) {
 }
 
 function spawnDamageText(position, amount, crit = false) {
+  const rounded = Math.max(1, Math.round(amount));
+  if (!crit && rounded < 2) return;
   const elText = document.createElement('div');
   elText.className = `damage-number${crit ? ' crit' : ''}`;
-  elText.textContent = `${crit ? 'CRIT ' : ''}-${Math.max(1, Math.round(amount))}`;
+  elText.textContent = `${crit ? 'CRIT ' : ''}-${rounded}`;
   document.getElementById('ui').appendChild(elText);
   const x = window.innerWidth * 0.5 + (Math.random() - 0.5) * 120;
   const y = window.innerHeight * 0.42 + damageTextStack * 18;
@@ -484,7 +486,7 @@ function spawnDamageText(position, amount, crit = false) {
     hudX: x,
     hudY: y,
     rise: 0,
-    life: 0.95,
+    life: crit ? 1.1 : 0.8,
     crit
   });
   requestAnimationFrame(() => elText.classList.add('show'));
@@ -524,7 +526,7 @@ function makeShark() {
   const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -60 + Math.random() * 40, Math.sin(a) * r);
   scene.add(group);
-  sharks.push({ mesh: group, speed: 2 + Math.random() * 1.5, damage: 18 + Math.random() * 12, bob: Math.random() * Math.PI * 2 });
+  sharks.push({ mesh: group, speed: 2 + Math.random() * 1.5, damage: 18 + Math.random() * 12, bob: Math.random() * Math.PI * 2, hp: 85 + Math.random() * 45, hitCooldown: 0 });
 }
 
 function makeOctopus() {
@@ -875,7 +877,7 @@ function updatePlayer(dt) {
 document.addEventListener('mousedown', e => { if (e.button === 0) keys.add('Mouse0'); });
 document.addEventListener('mouseup', e => { if (e.button === 0) keys.delete('Mouse0'); });
 
-function updateAliens(dt) {
+function updateAliens(dt, now) {
   alienSpawnTimer += dt;
   if (alienSpawnTimer > 6 && aliens.length < 10) { alienSpawnTimer = 0; makeAlien(); }
   for (const alien of aliens) {
@@ -894,13 +896,17 @@ function updateAliens(dt) {
     alien.mesh.lookAt(player.pos);
 
     if (dist < 1.8) {
-      const damageMultiplier = narwhalBuffUntil > performance.now() ? 2 : 1;
-      const ram = player.velocity.length() * config.ramPower() * 0.18 * damageMultiplier;
-      const crit = player.velocity.length() > config.moveSpeed() * 1.8;
-      alien.hp -= crit ? ram * 1.5 : ram;
-      spawnDamageText(alien.mesh.position, crit ? ram * 1.5 : ram, crit);
+      if (!alien.hitCooldown || now - alien.hitCooldown > 120) {
+        const damageMultiplier = narwhalBuffUntil > performance.now() ? 2 : 1;
+        const ram = player.velocity.length() * config.ramPower() * 0.18 * damageMultiplier;
+        const crit = player.velocity.length() > config.moveSpeed() * 1.8;
+        const dealt = crit ? ram * 1.5 : ram;
+        alien.hp -= dealt;
+        spawnDamageText(alien.mesh.position, dealt, crit);
+        alien.hitCooldown = now;
+        if (ram > 1.5) spawnRipple(alien.mesh.position, crit ? 0xff4444 : 0xffe08a);
+      }
       takeDamage(alien.damage * dt + 5 * (1 - Math.min(1, player.velocity.length() / (4 + state.upgrades.head))) * dt);
-      if (ram > 1.5) spawnRipple(alien.mesh.position, crit ? 0xff4444 : 0xffe08a);
       if (alien.hp <= 0) {
         scene.remove(alien.mesh);
         aliens.splice(i, 1);
@@ -973,7 +979,7 @@ function updateNarwhals(dt) {
   }
 }
 
-function updateSharks(dt) {
+function updateSharks(dt, now) {
   for (let i = sharks.length - 1; i >= 0; i--) {
     const shark = sharks[i];
     const toPlayer = player.pos.clone().sub(shark.mesh.position);
@@ -983,8 +989,24 @@ function updateSharks(dt) {
     shark.mesh.position.y += Math.sin(shark.bob) * 0.02;
     shark.mesh.lookAt(player.pos);
     if (dist < 2.6) {
+      if (!shark.hitCooldown || now - shark.hitCooldown > 120) {
+        const damageMultiplier = narwhalBuffUntil > performance.now() ? 2 : 1;
+        const ram = player.velocity.length() * config.ramPower() * 0.16 * damageMultiplier;
+        const crit = player.velocity.length() > config.moveSpeed() * 1.9;
+        const dealt = crit ? ram * 1.5 : ram;
+        shark.hp -= dealt;
+        spawnDamageText(shark.mesh.position, dealt, crit);
+        shark.hitCooldown = now;
+        spawnRipple(shark.mesh.position, crit ? 0xff4444 : 0xff8888);
+      }
       takeDamage(shark.damage * dt);
-      spawnRipple(shark.mesh.position, 0xff6666);
+      if (shark.hp <= 0) {
+        scene.remove(shark.mesh);
+        sharks.splice(i, 1);
+        state.currency += 18;
+        addXp(22);
+        continue;
+      }
     }
   }
 }
@@ -1024,9 +1046,9 @@ function animate(now) {
   stars.rotation.y += dt * 0.03;
   if (!paused && gameStarted) {
     updatePlayer(dt);
-    updateAliens(dt);
+    updateAliens(dt, now);
     updateNarwhals(dt);
-    updateSharks(dt);
+    updateSharks(dt, now);
     updatePickups(dt);
     for (const octo of octopi) {
       octo.bob += dt * 1.5;
