@@ -13,7 +13,7 @@ canvas { display: block; }
 .panel {
   width: min(92vw, 560px); max-height: 90vh; overflow: auto;
   background: rgba(8,18,34,0.96); border: 1px solid rgba(130,170,255,0.35); border-radius: 18px;
-  box-shadow: 0 20px 80px rgba(0,0,0,0.45); padding: 28px;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.45); padding: 28px; position: relative;
 }
 h1, h2, h3, p { margin-top: 0; }
 .title { font-size: 40px; margin-bottom: 6px; color: #9fdcff; }
@@ -25,6 +25,23 @@ button {
 }
 button.secondary { background: rgba(255,255,255,0.08); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
+#versionTag {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  font-size: 10px;
+  color: #ffd27d;
+  text-shadow: 2px 2px 0 #000;
+}
+.patch-note {
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.08);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #d7f1ff;
+}
 .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; }
 .value { color: #ffd27d; font-weight: 700; }
 input[type="range"] { width: 180px; }

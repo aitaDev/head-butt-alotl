@@ -2,6 +2,14 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 
 const app = document.getElementById('app');
 const saveKey = 'axolotl-alien-fighter-save';
+const gameVersion = 'v0.2.0';
+const patchNotes = [
+  'v0.2.0  Added menu patch notes, version tag, flashier XP UI, and bigger coral pass.',
+  'v0.1.9  Added user audio loops and ambient sound hooks.',
+  'v0.1.8  Removed hard world wrap bounce, world now recycles around player.',
+  'v0.1.7  Added sharks, whale chat, narwhals, octopus, fish, and coral biome detail.',
+  'v0.1.6  Added larger alien variety, progression tuning, and deeper ocean feel.'
+];
 
 const defaults = {
   options: {
@@ -95,6 +103,18 @@ app.innerHTML = `
         <button id="newGameBtn">New Game</button>
         <button id="continueBtn">Continue</button>
         <button id="optionsBtn" class="secondary">Options</button>
+        <button id="patchNotesBtn" class="secondary">Patch Notes</button>
+      </div>
+      <div id="versionTag">${gameVersion}</div>
+    </div>
+  </div>
+
+  <div id="patchNotesMenu" class="overlay hidden">
+    <div class="panel">
+      <h2>Patch Notes</h2>
+      <div id="patchNotesList" class="stack"></div>
+      <div class="stack" style="margin-top:16px">
+        <button id="closePatchNotesBtn">Back</button>
       </div>
     </div>
   </div>
@@ -695,6 +715,16 @@ function renderUpgradeMenu() {
   }
 }
 
+function renderPatchNotes() {
+  el.patchNotesList.innerHTML = '';
+  for (const note of patchNotes) {
+    const row = document.createElement('div');
+    row.className = 'patch-note';
+    row.textContent = note;
+    el.patchNotesList.appendChild(row);
+  }
+}
+
 function renderOptions() {
   el.graphicsValue.textContent = data.options.graphics;
   el.soundValue.textContent = `${data.options.sound}%`;
@@ -727,7 +757,7 @@ function setGraphics(delta) {
 }
 
 function openOverlay(id) {
-  for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu']) el[key].classList.add('hidden');
+  for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu', 'patchNotesMenu']) el[key].classList.add('hidden');
   if (id) el[id].classList.remove('hidden');
 }
 
@@ -820,6 +850,8 @@ el.continueBtn.onclick = () => continueAllowed && startGame(true);
 el.continueBtn.disabled = !continueAllowed;
 el.optionsBtn.onclick = () => { renderOptions(); openOverlay('optionsMenu'); };
 el.pauseOptionsBtn.onclick = () => { renderOptions(); openOverlay('optionsMenu'); };
+el.patchNotesBtn.onclick = () => { renderPatchNotes(); openOverlay('patchNotesMenu'); };
+el.closePatchNotesBtn.onclick = () => openOverlay('mainMenu');
 el.closeOptionsBtn.onclick = () => openOverlay(gameStarted && paused && !isGameOver ? 'pauseMenu' : 'mainMenu');
 el.resumeBtn.onclick = () => { unlockAudio(); paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
 el.charBtn.onclick = () => { renderUpgradeMenu(); openOverlay('upgradeMenu'); };
@@ -1146,6 +1178,7 @@ function animate(now) {
 }
 
 updateHUD();
+renderPatchNotes();
 renderOptions();
 renderUpgradeMenu();
 animate(performance.now());
