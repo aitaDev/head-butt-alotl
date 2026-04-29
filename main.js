@@ -377,6 +377,7 @@ const pickups = [];
 const sharks = [];
 const octopi = [];
 const narwhals = [];
+const leviathans = [];
 const floatingTexts = [];
 const ripples = [];
 let damageTextStack = 0;
@@ -396,7 +397,11 @@ const audio = {
   underwater: new Audio('./assets/audio/underwater-loop.mp3'),
   scuba: new Audio('./assets/audio/scuba.mp3'),
   whoosh: new Audio('./assets/audio/whoosh.mp3'),
-  whale: new Audio('./assets/audio/freesound_community-lowwhalesong.mp3')
+  whale: new Audio('./assets/audio/whale.mp3'),
+  menu: new Audio('./assets/audio/menu.mp3'),
+  eat: new Audio('./assets/audio/eat.mp3'),
+  gameOver: new Audio('./assets/audio/game_over.mp3'),
+  bigShark: new Audio('./assets/audio/big-shark.mp3')
 };
 audio.underwater.loop = true;
 audio.underwater.volume = 0.35;
@@ -404,6 +409,11 @@ audio.scuba.volume = 0.5;
 audio.whoosh.loop = true;
 audio.whoosh.volume = 0.35;
 audio.whale.volume = 0.55;
+audio.menu.volume = 0.45;
+audio.eat.volume = 0.5;
+audio.gameOver.volume = 0.65;
+audio.bigShark.loop = true;
+audio.bigShark.volume = 0.5;
 
 function unlockAudio() {
   if (audioUnlocked) return;
@@ -576,6 +586,23 @@ function makeNarwhal() {
   narwhals.push({ mesh: group, activeUntil: 0, following: false, bob: Math.random() * Math.PI * 2 });
 }
 
+function makeLeviathan() {
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(28, 8, 8), new THREE.MeshStandardMaterial({ color: 0x2f4358, roughness: 0.72 }));
+  const fin = new THREE.Mesh(new THREE.BoxGeometry(2, 6, 1.2), new THREE.MeshStandardMaterial({ color: 0x394f66 }));
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(2, 6, 6), new THREE.MeshStandardMaterial({ color: 0x2d4258 }));
+  const jaw = new THREE.Mesh(new THREE.BoxGeometry(5, 1.5, 4), new THREE.MeshStandardMaterial({ color: 0xdedede }));
+  fin.position.set(0, 4.8, 0);
+  tail.position.set(-15, 0, 0);
+  jaw.position.set(13.5, -1.5, 0);
+  group.add(body, fin, tail, jaw);
+  const r = 70 + Math.random() * 40;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -45 + Math.random() * 18, Math.sin(a) * r);
+  scene.add(group);
+  leviathans.push({ mesh: group, speed: 8 + Math.random() * 3, damage: 100, hp: 900, bob: Math.random() * Math.PI * 2 });
+}
+
 function makeShark() {
   const group = new THREE.Group();
   const body = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.35, 1.35), new THREE.MeshStandardMaterial({ color: 0x6f8897, roughness: 0.7 }));
@@ -617,6 +644,7 @@ for (let i = 0; i < 18; i++) makePickup();
 for (let i = 0; i < 2; i++) makeShark();
 for (let i = 0; i < 10; i++) makeOctopus();
 for (let i = 0; i < 2; i++) makeNarwhal();
+if (Math.random() < 0.08) makeLeviathan();
 
 function addXp(amount) {
   state.xp += amount;
@@ -640,6 +668,8 @@ function takeDamage(amount) {
     isGameOver = true;
     paused = true;
     pointerLocked = false;
+    audio.gameOver.currentTime = 0;
+    audio.gameOver.play().catch(() => {});
     document.exitPointerLock();
     openOverlay('gameOverMenu');
   }
@@ -845,12 +875,12 @@ renderer.domElement.addEventListener('click', () => {
   if (gameStarted && !pointerLocked && !paused) renderer.domElement.requestPointerLock();
 });
 
-el.newGameBtn.onclick = () => startGame(false);
-el.continueBtn.onclick = () => continueAllowed && startGame(true);
+el.newGameBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); startGame(false); };
+el.continueBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); continueAllowed && startGame(true); };
 el.continueBtn.disabled = !continueAllowed;
-el.optionsBtn.onclick = () => { renderOptions(); openOverlay('optionsMenu'); };
-el.pauseOptionsBtn.onclick = () => { renderOptions(); openOverlay('optionsMenu'); };
-el.patchNotesBtn.onclick = () => { renderPatchNotes(); openOverlay('patchNotesMenu'); };
+el.optionsBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); renderOptions(); openOverlay('optionsMenu'); };
+el.pauseOptionsBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); renderOptions(); openOverlay('optionsMenu'); };
+el.patchNotesBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); renderPatchNotes(); openOverlay('patchNotesMenu'); };
 el.closePatchNotesBtn.onclick = () => openOverlay('mainMenu');
 el.closeOptionsBtn.onclick = () => openOverlay(gameStarted && paused && !isGameOver ? 'pauseMenu' : 'mainMenu');
 el.resumeBtn.onclick = () => { unlockAudio(); paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
@@ -859,7 +889,7 @@ el.closeUpgradeBtn.onclick = () => openOverlay('pauseMenu');
 el.quitBtn.onclick = quitToTitle;
 el.retryBtn.onclick = () => { unlockAudio(); startGame(false); };
 el.gameOverTitleBtn.onclick = quitToTitle;
-el.closeWhaleChatBtn.onclick = () => { paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
+el.closeWhaleChatBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
 el.graphicsDown.onclick = () => setGraphics(-1);
 el.graphicsUp.onclick = () => setGraphics(1);
 el.soundSlider.oninput = e => { data.options.sound = Number(e.target.value); persist(); renderOptions(); };
@@ -1021,6 +1051,8 @@ function updateAliens(dt, now) {
         const crit = player.velocity.length() > config.moveSpeed() * 1.8;
         const dealt = crit ? ram * 1.5 : ram;
         alien.hp -= dealt;
+        audio.eat.currentTime = 0;
+        audio.eat.play().catch(() => {});
         spawnDamageText(alien.mesh.position, dealt, crit);
         alien.hitCooldown = now;
         if (ram > 1.5) spawnRipple(alien.mesh.position, crit ? 0xff4444 : 0xffe08a);
@@ -1100,6 +1132,28 @@ function updateNarwhals(dt) {
   }
 }
 
+function updateLeviathans(dt, now) {
+  let nearLeviathan = false;
+  for (let i = leviathans.length - 1; i >= 0; i--) {
+    const leviathan = leviathans[i];
+    if (leviathan.mesh.position.x - player.pos.x > worldRadius) leviathan.mesh.position.x -= worldRadius * 2;
+    if (leviathan.mesh.position.x - player.pos.x < -worldRadius) leviathan.mesh.position.x += worldRadius * 2;
+    if (leviathan.mesh.position.z - player.pos.z > worldRadius) leviathan.mesh.position.z -= worldRadius * 2;
+    if (leviathan.mesh.position.z - player.pos.z < -worldRadius) leviathan.mesh.position.z += worldRadius * 2;
+    const toPlayer = player.pos.clone().sub(leviathan.mesh.position);
+    const dist = toPlayer.length();
+    if (dist < 40) nearLeviathan = true;
+    if (dist > 0.001) leviathan.mesh.position.addScaledVector(toPlayer.normalize(), leviathan.speed * dt);
+    leviathan.mesh.lookAt(player.pos);
+  }
+  if (nearLeviathan) {
+    if (audio.bigShark.paused) audio.bigShark.play().catch(() => {});
+  } else {
+    audio.bigShark.pause();
+    audio.bigShark.currentTime = 0;
+  }
+}
+
 function updateSharks(dt, now) {
   for (let i = sharks.length - 1; i >= 0; i--) {
     const shark = sharks[i];
@@ -1122,6 +1176,8 @@ function updateSharks(dt, now) {
         const crit = player.velocity.length() > config.moveSpeed() * 1.9;
         const dealt = crit ? ram * 1.5 : ram;
         shark.hp -= dealt;
+        audio.eat.currentTime = 0;
+        audio.eat.play().catch(() => {});
         spawnDamageText(shark.mesh.position, dealt, crit);
         shark.hitCooldown = now;
         spawnRipple(shark.mesh.position, crit ? 0xff4444 : 0xff8888);
@@ -1175,6 +1231,7 @@ function animate(now) {
     updatePlayer(dt);
     updateAliens(dt, now);
     updateNarwhals(dt);
+    updateLeviathans(dt, now);
     updateSharks(dt, now);
     updatePickups(dt);
     for (const octo of octopi) {
