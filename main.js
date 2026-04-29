@@ -2,8 +2,9 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 
 const app = document.getElementById('app');
 const saveKey = 'axolotl-alien-fighter-save';
-const gameVersion = 'v0.3.3';
+const gameVersion = 'v0.3.4';
 const patchNotes = [
+  'v0.3.4  Seabed creatures now live: urchins spike on contact, crabs scuttle and deal damage, starfish are collectible with respawn.',
   'v0.3.3  HP bar flashes red while sprinting, screen shake on critical headbutts.',
   'v0.3.2  Halved whale size, added whale swimming movement, and restored menu button sound triggers.',
   'v0.3.0  Upgrades visibly change axolotl, new creatures: jellyfish/seahorses/orbs/anemones, bubble particles, animated kelp, bioluminescent glow, lore tablets, light rays, treasure chests.',
@@ -1857,6 +1858,7 @@ function animate(now) {
     updateFloatingTexts(dt);
     updateRipples(dt);
     updateCreatureInteractions(now);
+    updateSeabedCreatures(dt, now);
     persist();
     updateHUD();
   }
@@ -1998,3 +2000,74 @@ renderPatchNotes();
 renderOptions();
 renderUpgradeMenu();
 animate(performance.now());
+
+// ── Seabed creature interactions ──
+function updateSeabedCreatures(dt, now) {
+  // Sea urchins — spike damage on contact, like touching coral
+  for (const urchin of urchins) {
+    urchin.bob += dt * 1.3;
+    urchin.mesh.position.y = -83.5 + Math.sin(urchin.bob) * 0.05;
+    urchin.mesh.rotation.y += dt * 0.4;
+    const dx = urchin.mesh.position.x - player.pos.x;
+    const dz = urchin.mesh.position.z - player.pos.z;
+    if (Math.abs(dx) > worldRadius) urchin.mesh.position.x = player.pos.x + (Math.random() - 0.5) * worldRadius * 1.8;
+    if (Math.abs(dz) > worldRadius) urchin.mesh.position.z = player.pos.z + (Math.random() - 0.5) * worldRadius * 1.8;
+    if (urchin.hitCooldown > 0) urchin.hitCooldown -= dt;
+    const dist = urchin.mesh.position.distanceTo(player.pos);
+    if (dist < 1.8 + player.radius) {
+      resolveSolidCollision(player.pos, urchin.mesh.position, 1.8 + player.radius);
+      if (urchin.hitCooldown <= 0) {
+        takeDamage(4 * dt);
+        urchin.hitCooldown = 0.5;
+      }
+    }
+  }
+
+  // Crabs — scuttle around, deal contact damage and scatter when touched
+  for (const crab of crabs) {
+    crab.bob += dt * 1.6;
+    crab.mesh.position.y = -83.5 + Math.sin(crab.bob) * 0.04;
+    crab.wanderAngle += dt * 0.5;
+    crab.mesh.rotation.y = crab.wanderAngle;
+    crab.mesh.position.x += Math.cos(crab.wanderAngle) * crab.speed * dt * 0.6;
+    crab.mesh.position.z += Math.sin(crab.wanderAngle) * crab.speed * dt * 0.6;
+    if (crab.hitCooldown > 0) crab.hitCooldown -= dt;
+    const dx = crab.mesh.position.x - player.pos.x;
+    const dz = crab.mesh.position.z - player.pos.z;
+    if (Math.abs(dx) > worldRadius) { crab.wanderAngle = Math.random() * Math.PI * 2; crab.mesh.position.x = player.pos.x + (Math.random() - 0.5) * worldRadius * 1.6; }
+    if (Math.abs(dz) > worldRadius) { crab.wanderAngle = Math.random() * Math.PI * 2; crab.mesh.position.z = player.pos.z + (Math.random() - 0.5) * worldRadius * 1.6; }
+    const dist = crab.mesh.position.distanceTo(player.pos);
+    if (dist < 1.5 + player.radius) {
+      resolveSolidCollision(player.pos, crab.mesh.position, 1.5 + player.radius);
+      if (crab.hitCooldown <= 0) {
+        takeDamage(3 * dt);
+        crab.hitCooldown = 0.4;
+        crab.wanderAngle = Math.random() * Math.PI * 2;
+      }
+    }
+  }
+
+  // Starfish — collectible like seahorses, respawn after delay
+  for (let i = starfish.length - 1; i >= 0; i--) {
+    const sf = starfish[i];
+    sf.bob += dt * 0.9;
+    sf.mesh.position.y = -84.0 + Math.sin(sf.bob) * 0.06;
+    sf.mesh.rotation.z += dt * 0.2;
+    const dx = sf.mesh.position.x - player.pos.x;
+    const dz = sf.mesh.position.z - player.pos.z;
+    if (Math.abs(dx) > worldRadius || Math.abs(dz) > worldRadius) {
+      sf.mesh.position.x = player.pos.x + (Math.random() - 0.5) * worldRadius * 1.6;
+      sf.mesh.position.z = player.pos.z + (Math.random() - 0.5) * worldRadius * 1.6;
+    }
+    const dist = sf.mesh.position.distanceTo(player.pos);
+    if (dist < 1.6 && player.velocity.length() > 1.2) {
+      scene.remove(sf.mesh);
+      starfish.splice(i, 1);
+      state.currency += 1;
+      addXp(3);
+      spawnRipple(sf.mesh.position, sf.color || 0xffaa44);
+      showNotice('⭐ Starfish collected! +3 XP');
+      setTimeout(() => { if (gameStarted && starfish.length < 12) makeStarfish(); }, 4000);
+    }
+  }
+}
