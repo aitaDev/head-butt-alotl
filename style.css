@@ -1,5 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; overflow: hidden; font-family: Inter, Arial, sans-serif; background: #02131f; color: #fff; }
+html, body { margin: 0; height: 100%; overflow: hidden; font-family: 'Press Start 2P', monospace; background: #02131f; color: #fff; }
 canvas { display: block; }
 .hidden { display: none !important; }
 #app, #ui { position: fixed; inset: 0; }
@@ -20,7 +21,7 @@ h1, h2, h3, p { margin-top: 0; }
 .menu-buttons, .stack { display: grid; gap: 12px; }
 button {
   appearance: none; border: 0; border-radius: 12px; padding: 14px 16px; cursor: pointer;
-  background: linear-gradient(180deg, #5ad1ff, #2f78ff); color: white; font-weight: 700; font-size: 15px;
+  background: linear-gradient(180deg, #5ad1ff, #2f78ff); color: white; font-weight: 700; font-size: 12px; text-transform: uppercase;
 }
 button.secondary { background: rgba(255,255,255,0.08); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -43,8 +44,27 @@ input[type="range"] { width: 180px; }
 #crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.7); }
 #crosshair::before { width: 2px; height: 12px; left: 5px; }
 #crosshair::after { height: 2px; width: 12px; top: 5px; }
-#notice { position: fixed; left: 50%; top: 84px; transform: translateX(-50%); z-index: 6; background: rgba(5,15,30,0.8); border-radius: 999px; padding: 10px 16px; color: #d7f1ff; opacity: 0; transition: opacity 0.2s; }
+#notice { position: fixed; left: 50%; top: 84px; transform: translateX(-50%); z-index: 6; background: rgba(5,15,30,0.92); border: 3px solid #8bd8ff; border-radius: 4px; padding: 10px 16px; color: #d7f1ff; opacity: 0; transition: opacity 0.2s; font-size: 10px; line-height: 1.5; text-align: center; }
 #notice.show { opacity: 1; }
+.damage-number {
+  position: fixed;
+  transform: translate(-50%, -50%) scale(0.8);
+  color: #ff5a5a;
+  font-size: 14px;
+  z-index: 30;
+  pointer-events: none;
+  text-shadow: 2px 2px 0 #000;
+  opacity: 0;
+  transition: transform 0.12s ease-out, opacity 0.12s ease-out;
+}
+.damage-number.show {
+  opacity: 1;
+  transform: translate(-50%, -80%) scale(1);
+}
+.damage-number.crit {
+  color: #ffe066;
+  font-size: 16px;
+}
 .upgrade { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; background: rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; margin-bottom: 10px; }
 .keybind { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin: 10px 0; }
 .keybtn.listening { outline: 2px solid #ffd166; }

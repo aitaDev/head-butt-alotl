@@ -77,6 +77,16 @@ app.innerHTML = `
       </div>
     </div>
   </div>
+
+  <div id="whaleChatMenu" class="overlay hidden">
+    <div class="panel">
+      <h2>Whale Wisdom</h2>
+      <p class="subtitle">"Please help protect the ocean. Trash, oil, plastic, and poison spread everywhere. Clean water means life for all of us."</p>
+      <div class="menu-buttons">
+        <button id="closeWhaleChatBtn">I Understand</button>
+      </div>
+    </div>
+  </div>
   <div id="mainMenu" class="overlay">
     <div class="panel">
       <h1 class="title">Head-Butt-Alotl</h1>
@@ -321,6 +331,7 @@ const worldRadius = 100;
 const worldWrapRadius = 120;
 let isGameOver = false;
 let narwhalBuffUntil = 0;
+let whaleChatCooldownUntil = 0;
 
 function makeAlien() {
   const group = new THREE.Group();
@@ -422,6 +433,20 @@ function spawnRipple(position, color = 0xffffff) {
   mesh.position.copy(position);
   scene.add(mesh);
   ripples.push({ mesh, life: 0.7 });
+}
+
+function spawnDamageText(position, amount, crit = false) {
+  const elText = document.createElement('div');
+  elText.className = `damage-number${crit ? ' crit' : ''}`;
+  elText.textContent = `${crit ? 'CRIT ' : ''}-${Math.max(1, Math.round(amount))}`;
+  document.getElementById('ui').appendChild(elText);
+  const screen = position.clone().project(camera);
+  const x = (screen.x * 0.5 + 0.5) * innerWidth;
+  const y = (-screen.y * 0.5 + 0.5) * innerHeight;
+  elText.style.left = `${x}px`;
+  elText.style.top = `${y}px`;
+  requestAnimationFrame(() => elText.classList.add('show'));
+  setTimeout(() => elText.remove(), 950);
 }
 
 function makeNarwhal() {
@@ -535,8 +560,10 @@ function updateHUD() {
   el.healthLabel.textContent = `Health ${Math.round(state.health)}/${config.maxHealth()}`;
   el.currency.textContent = state.currency;
   el.aliensBonked.textContent = state.stats.aliensBonked;
-  if (player.pos.distanceTo(whale.position) < 14) {
-    showNotice('🐋 Keep the oceans clean. Pollution hurts every creature down here, and it all flows back to us.');
+  if (player.pos.distanceTo(whale.position) < 14 && performance.now() > whaleChatCooldownUntil && !paused) {
+    paused = true;
+    whaleChatCooldownUntil = performance.now() + 120000;
+    openOverlay('whaleChatMenu');
   }
   if (narwhalBuffUntil > performance.now()) {
     showNotice('🦄 Narwhal ally active, double damage for 1 minute');
@@ -597,7 +624,7 @@ function setGraphics(delta) {
 }
 
 function openOverlay(id) {
-  for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu']) el[key].classList.add('hidden');
+  for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu']) el[key].classList.add('hidden');
   if (id) el[id].classList.remove('hidden');
 }
 
@@ -685,6 +712,7 @@ el.closeUpgradeBtn.onclick = () => openOverlay('pauseMenu');
 el.quitBtn.onclick = quitToTitle;
 el.retryBtn.onclick = () => startGame(false);
 el.gameOverTitleBtn.onclick = quitToTitle;
+el.closeWhaleChatBtn.onclick = () => { paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
 el.graphicsDown.onclick = () => setGraphics(-1);
 el.graphicsUp.onclick = () => setGraphics(1);
 el.soundSlider.oninput = e => { data.options.sound = Number(e.target.value); persist(); renderOptions(); };
@@ -815,9 +843,11 @@ function updateAliens(dt) {
     if (dist < 1.8) {
       const damageMultiplier = narwhalBuffUntil > performance.now() ? 2 : 1;
       const ram = player.velocity.length() * config.ramPower() * 0.18 * damageMultiplier;
-      alien.hp -= ram;
+      const crit = player.velocity.length() > config.moveSpeed() * 1.8;
+      alien.hp -= crit ? ram * 1.5 : ram;
+      spawnDamageText(alien.mesh.position, crit ? ram * 1.5 : ram, crit);
       takeDamage(alien.damage * dt + 5 * (1 - Math.min(1, player.velocity.length() / (4 + state.upgrades.head))) * dt);
-      if (ram > 1.5) spawnRipple(alien.mesh.position, 0xffe08a);
+      if (ram > 1.5) spawnRipple(alien.mesh.position, crit ? 0xff4444 : 0xffe08a);
       if (alien.hp <= 0) {
         scene.remove(alien.mesh);
         aliens.splice(i, 1);
