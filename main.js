@@ -213,12 +213,13 @@ floor.position.y = -86;
 scene.add(floor);
 
 const reeds = [];
-for (let i = 0; i < 120; i++) {
+const grassColors = [0xff3b30, 0xff9500, 0xffcc00, 0x34c759, 0x32ade6, 0x5856d6, 0xaf52de];
+for (let i = 0; i < 260; i++) {
   const reed = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.06, 0.09, 2 + Math.random() * 3, 6),
-    new THREE.MeshStandardMaterial({ color: 0x77a85d })
+    new THREE.BoxGeometry(0.1, 1.2 + Math.random() * 2.8, 0.1),
+    new THREE.MeshStandardMaterial({ color: grassColors[i % grassColors.length], roughness: 0.82 })
   );
-  const r = 20 + Math.random() * 50;
+  const r = 8 + Math.random() * 92;
   const a = Math.random() * Math.PI * 2;
   reed.position.set(Math.cos(a) * r, -83 + reed.geometry.parameters.height / 2, Math.sin(a) * r);
   reeds.push(reed);
@@ -226,23 +227,37 @@ for (let i = 0; i < 120; i++) {
 }
 
 const coral = [];
-for (let i = 0; i < 45; i++) {
+for (let i = 0; i < 90; i++) {
   const group = new THREE.Group();
-  const colors = [0xff7aa2, 0xff9966, 0xa66cff, 0xffcc66];
-  for (let j = 0; j < 4; j++) {
+  const colors = [0xff7aa2, 0xff9966, 0xa66cff, 0xffcc66, 0x66e0ff, 0xff6680];
+  for (let j = 0; j < 5; j++) {
     const branch = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.12, 0.18, 1.2 + Math.random() * 1.4, 6),
+      new THREE.BoxGeometry(0.28, 1 + Math.random() * 1.8, 0.28),
       new THREE.MeshStandardMaterial({ color: colors[(i + j) % colors.length], roughness: 0.85 })
     );
-    branch.position.set((j - 1.5) * 0.25, branch.geometry.parameters.height / 2, (Math.random() - 0.5) * 0.35);
-    branch.rotation.z = (Math.random() - 0.5) * 0.6;
+    branch.position.set((j - 2) * 0.22, branch.geometry.parameters.height / 2, (Math.random() - 0.5) * 0.45);
+    branch.rotation.z = (Math.random() - 0.5) * 0.35;
     group.add(branch);
   }
-  const r = 15 + Math.random() * 80;
+  const r = 12 + Math.random() * 90;
   const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -83, Math.sin(a) * r);
   coral.push(group);
   scene.add(group);
+}
+
+const shells = [];
+for (let i = 0; i < 60; i++) {
+  const shell = new THREE.Mesh(
+    new THREE.BoxGeometry(0.45, 0.18, 0.35),
+    new THREE.MeshStandardMaterial({ color: i % 2 ? 0xf5ddc8 : 0xe9c6ff, roughness: 0.9 })
+  );
+  const r = 10 + Math.random() * 95;
+  const a = Math.random() * Math.PI * 2;
+  shell.position.set(Math.cos(a) * r, -83.7, Math.sin(a) * r);
+  shell.rotation.y = Math.random() * Math.PI;
+  shells.push(shell);
+  scene.add(shell);
 }
 
 const whale = new THREE.Group();
@@ -422,7 +437,9 @@ function makePickup(kind = Math.random() < 0.12 ? 'steak' : Math.random() < 0.45
     band2.rotation.x = 1.05;
     group.add(body, band1, band2);
   }
-  const r = 8 + Math.random() * 48;
+  const minR = kind === 'fish' ? 28 : 8;
+  const maxR = kind === 'fish' ? 110 : 48;
+  const r = minR + Math.random() * (maxR - minR);
   const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -76 + Math.random() * 68, Math.sin(a) * r);
   group.rotation.set(Math.random(), Math.random(), Math.random());
@@ -515,8 +532,8 @@ function makeOctopus() {
 }
 
 for (let i = 0; i < 5; i++) makeAlien();
-for (let i = 0; i < 10; i++) makePickup();
-for (let i = 0; i < 4; i++) makeShark();
+for (let i = 0; i < 18; i++) makePickup();
+for (let i = 0; i < 2; i++) makeShark();
 for (let i = 0; i < 10; i++) makeOctopus();
 for (let i = 0; i < 2; i++) makeNarwhal();
 
@@ -883,7 +900,7 @@ function updateAliens(dt) {
 
 function updatePickups(dt) {
   pickupSpawnTimer += dt;
-  if (pickupSpawnTimer > 2.8 && pickups.length < 16) { pickupSpawnTimer = 0; makePickup(); }
+  if (pickupSpawnTimer > 2.4 && pickups.length < 24) { pickupSpawnTimer = 0; makePickup(); }
   for (let i = pickups.length - 1; i >= 0; i--) {
     const p = pickups[i];
     if (p.mesh.position.x - player.pos.x > worldRadius) p.mesh.position.x -= worldRadius * 2;
