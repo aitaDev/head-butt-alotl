@@ -10,6 +10,14 @@ canvas { display: block; }
   position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
   background: radial-gradient(circle at top, rgba(60,100,180,0.35), rgba(0,0,0,0.85)); z-index: 20;
 }
+.thunder-panel {
+  animation: thunderPulse 0.18s steps(2) infinite alternate;
+  box-shadow: 0 0 50px rgba(255,255,255,0.35), 0 0 120px rgba(120,160,255,0.25);
+}
+@keyframes thunderPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.02); filter: brightness(1.35); }
+}
 .panel {
   width: min(92vw, 560px); max-height: 90vh; overflow: auto;
   background: rgba(8,18,34,0.96); border: 1px solid rgba(130,170,255,0.35); border-radius: 18px;
@@ -46,6 +54,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .value { color: #ffd27d; font-weight: 700; }
 input[type="range"] { width: 180px; }
 .small { font-size: 13px; color: #9fb4d0; }
+#gameOverMenu {
+  animation: fullThunder 0.22s steps(2) infinite alternate;
+}
+@keyframes fullThunder {
+  0% { background: radial-gradient(circle at top, rgba(80,80,120,0.4), rgba(0,0,0,0.92)); }
+  100% { background: radial-gradient(circle at top, rgba(220,220,255,0.75), rgba(20,20,40,0.95)); }
+}
 #hud {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 5; pointer-events: none;
   display: grid; gap: 8px; width: min(560px, 86vw);

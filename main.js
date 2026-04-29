@@ -2,8 +2,9 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 
 const app = document.getElementById('app');
 const saveKey = 'axolotl-alien-fighter-save';
-const gameVersion = 'v0.2.0';
+const gameVersion = 'v0.3.0';
 const patchNotes = [
+  'v0.3.0  Upgrades visibly change axolotl, new creatures: jellyfish/seahorses/orbs/anemones, bubble particles, animated kelp, bioluminescent glow, lore tablets, light rays, treasure chests.',
   'v0.2.0  Added menu patch notes, version tag, flashier XP UI, and bigger coral pass.',
   'v0.1.9  Added user audio loops and ambient sound hooks.',
   'v0.1.8  Removed hard world wrap bounce, world now recycles around player.',
@@ -76,9 +77,9 @@ const upgradesMeta = [
 app.innerHTML = `
 <div id="ui">
   <div id="gameOverMenu" class="overlay hidden">
-    <div class="panel">
+    <div class="panel thunder-panel">
       <h1 style="font-size:44px;color:#ff4d6d;text-shadow:0 0 18px rgba(255,0,64,0.6)">GAME OVER</h1>
-      <p class="subtitle" style="color:#ffb3c1">The pond went silent. The aliens are still out there.</p>
+      <p class="subtitle" id="gameOverCaption" style="color:#ffb3c1">you found out huh?</p>
       <div class="menu-buttons">
         <button id="retryBtn">Rise Again</button>
         <button id="gameOverTitleBtn" class="secondary">Quit to Title</button>
@@ -89,9 +90,21 @@ app.innerHTML = `
   <div id="whaleChatMenu" class="overlay hidden">
     <div class="panel">
       <h2>Whale Wisdom</h2>
-      <p class="subtitle">"Please help protect the ocean. Trash, oil, plastic, and poison spread everywhere. Clean water means life for all of us."</p>
+      <p class="subtitle" id="whaleDialogText">Please help protect the ocean. Trash, oil, plastic, and poison spread everywhere. Clean water means life for all of us.</p>
       <div class="menu-buttons">
         <button id="closeWhaleChatBtn">I Understand</button>
+        <div class="small">Hit space to continue</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tutorialMenu" class="overlay hidden">
+    <div class="panel">
+      <h2>How To Swim</h2>
+      <p class="subtitle">W move forward, S back, A left, D right, move mouse to aim, Shift sprint, U upgrades, Esc pause.</p>
+      <div class="menu-buttons">
+        <button id="closeTutorialBtn">Start Swimming</button>
+        <div class="small">Hit space to continue</div>
       </div>
     </div>
   </div>
@@ -302,21 +315,25 @@ for (let i = 0; i < 60; i++) {
 }
 
 const whale = new THREE.Group();
-const whaleBody = new THREE.Mesh(new THREE.BoxGeometry(13.5, 4.8, 4.8), new THREE.MeshStandardMaterial({ color: 0x4a6f96, roughness: 0.8 }));
-const whaleHead = new THREE.Mesh(new THREE.BoxGeometry(5.8, 3.8, 3.8), new THREE.MeshStandardMaterial({ color: 0x5d84aa, roughness: 0.75 }));
+const whaleBody = new THREE.Mesh(new THREE.BoxGeometry(135, 48, 48), new THREE.MeshStandardMaterial({ color: 0x4a6f96, roughness: 0.8 }));
+const whaleHead = new THREE.Mesh(new THREE.BoxGeometry(58, 38, 38), new THREE.MeshStandardMaterial({ color: 0x5d84aa, roughness: 0.75 }));
 const whaleTailL = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.18, 1.5), new THREE.MeshStandardMaterial({ color: 0x486b90 }));
 const whaleTailR = whaleTailL.clone();
 const whaleFinL = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.15, 0.8), new THREE.MeshStandardMaterial({ color: 0x3e6186 }));
 const whaleFinR = whaleFinL.clone();
-whaleHead.position.set(8.4, 0.2, 0);
-whaleTailL.position.set(-8.8, 0.7, 1.8);
-whaleTailR.position.set(-8.8, 0.7, -1.8);
+whaleHead.position.set(84, 2, 0);
+whaleTailL.position.set(-88, 7, 18);
+whaleTailR.position.set(-88, 7, -18);
 whaleTailL.rotation.y = 0.45;
 whaleTailR.rotation.y = -0.45;
-whaleFinL.position.set(0.8, -1.8, 2.7);
-whaleFinR.position.set(0.8, -1.8, -2.7);
+whaleFinL.position.set(8, -18, 27);
+whaleFinR.position.set(8, -18, -27);
+whaleTailL.scale.set(10, 10, 10);
+whaleTailR.scale.set(10, 10, 10);
+whaleFinL.scale.set(10, 10, 10);
+whaleFinR.scale.set(10, 10, 10);
 whale.add(whaleBody, whaleHead, whaleTailL, whaleTailR, whaleFinL, whaleFinR);
-whale.position.set(18, -56, -10);
+whale.position.set(180, -65, -100);
 scene.add(whale);
 
 const stars = new THREE.Group();
@@ -369,6 +386,99 @@ axEyeR.position.set(1.8, 0.22, -0.24);
 axolotl.add(axBody, axBodyStripe, axHead, axMouth, axTail, axTailTip, axLegFL, axLegFR, axLegBL, axLegBR, axGillL, axGillR, axEyeL, axEyeR);
 scene.add(axolotl);
 
+// --- Upgrade visual meshes (dynamically shown/hidden based on upgrade level) ---
+const upgradeVisuals = {
+  fins: [],    // extra side fins
+  head: [],    // head armor plates + spikes
+  lungs: [],   // extra gill filaments
+  bite: []     // jaw widen + teeth shine
+};
+
+function refreshAxolotlVisuals() {
+  // Remove old upgrade visuals
+  for (const key of Object.keys(upgradeVisuals)) {
+    for (const m of upgradeVisuals[key]) axolotl.remove(m);
+    upgradeVisuals[key] = [];
+  }
+  // ── Fins: extra dorsal fins appear at fin level 2+ ──
+  const finLvl = state.upgrades.fins;
+  if (finLvl >= 2) {
+    const dorsalFin = new THREE.Mesh(
+      new THREE.BoxGeometry(0.18, 0.55 + finLvl * 0.15, 0.7),
+      new THREE.MeshStandardMaterial({ color: 0xff78bc, roughness: 0.75 })
+    );
+    dorsalFin.position.set(-0.2, 0.52 + finLvl * 0.08, 0);
+    axolotl.add(dorsalFin);
+    upgradeVisuals.fins.push(dorsalFin);
+  }
+  if (finLvl >= 4) {
+    const finL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.38, 0.55), new THREE.MeshStandardMaterial({ color: 0xff60b0, roughness: 0.7 }));
+    const finR = finL.clone();
+    finL.position.set(-0.3, 0.28, 0.55); finR.position.set(-0.3, 0.28, -0.55);
+    axolotl.add(finL, finR);
+    upgradeVisuals.fins.push(finL, finR);
+  }
+  // ── Head: armor plates + spikes appear at head level 2+ ──
+  const headLvl = state.upgrades.head;
+  if (headLvl >= 1) {
+    const plate1 = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.18, 0.85), new THREE.MeshStandardMaterial({ color: 0xd96ba8, roughness: 0.6, metalness: 0.12 }));
+    plate1.position.set(1.38, 0.52, 0);
+    axolotl.add(plate1);
+    upgradeVisuals.head.push(plate1);
+  }
+  if (headLvl >= 2) {
+    const spike1 = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.38, 0.14), new THREE.MeshStandardMaterial({ color: 0xffc4e3, emissive: 0x6b1848, roughness: 0.4 }));
+    const spike2 = spike1.clone();
+    spike1.position.set(1.35, 0.82, 0.28); spike2.position.set(1.35, 0.82, -0.28);
+    axolotl.add(spike1, spike2);
+    upgradeVisuals.head.push(spike1, spike2);
+  }
+  if (headLvl >= 4) {
+    const crest = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.28, 0.65), new THREE.MeshStandardMaterial({ color: 0xe870c0, emissive: 0x5a1040, roughness: 0.45, metalness: 0.2 }));
+    crest.position.set(0.9, 0.62, 0);
+    axolotl.add(crest);
+    upgradeVisuals.head.push(crest);
+    // glowing eyes
+    axEyeL.material = new THREE.MeshStandardMaterial({ color: 0xffee44, emissive: 0xffee44, emissiveIntensity: 0.6 });
+    axEyeR.material = axEyeL.material.clone();
+  }
+  // ── Lungs: extra gill filaments at lung level 2+ ──
+  const lungsLvl = state.upgrades.lungs;
+  if (lungsLvl >= 2) {
+    for (let i = 0; i < Math.min(lungsLvl, 3); i++) {
+      const gillExtra = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.45 + i * 0.12, 0.7),
+        new THREE.MeshStandardMaterial({ color: 0xff3a9e, transparent: true, opacity: 0.85 }));
+      gillExtra.position.set(1.0, 0.28 + i * 0.22, 0);
+      axolotl.add(gillExtra);
+      upgradeVisuals.lungs.push(gillExtra);
+    }
+  }
+  if (lungsLvl >= 4) {
+    const lungGlow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0xff88cc, emissive: 0xff44aa, emissiveIntensity: 0.7, transparent: true, opacity: 0.5 }));
+    lungGlow.position.set(1.05, 0.28, 0);
+    axolotl.add(lungGlow);
+    upgradeVisuals.lungs.push(lungGlow);
+  }
+  // ── Bite: jaw widen + tooth flash at bite level 2+ ──
+  const biteLvl = state.upgrades.bite;
+  if (biteLvl >= 2) {
+    axMouth.scale.x = 1.4 + biteLvl * 0.12;
+    const tooth1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.1), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xaaffee, emissiveIntensity: 0.3 }));
+    const tooth2 = tooth1.clone();
+    tooth1.position.set(1.88, -0.06, 0.12); tooth2.position.set(1.88, -0.06, -0.12);
+    axolotl.add(tooth1, tooth2);
+    upgradeVisuals.bite.push(tooth1, tooth2);
+  }
+  if (biteLvl >= 4) {
+    const jawPlate = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.14, 0.58), new THREE.MeshStandardMaterial({ color: 0xcc5588, roughness: 0.55, metalness: 0.18 }));
+    jawPlate.position.set(1.88, -0.22, 0);
+    axolotl.add(jawPlate);
+    upgradeVisuals.bite.push(jawPlate);
+  }
+}
+refreshAxolotlVisuals();
+
 const cameraTarget = new THREE.Vector3();
 const cameraOffset = new THREE.Vector3();
 
@@ -380,7 +490,29 @@ const narwhals = [];
 const leviathans = [];
 const floatingTexts = [];
 const ripples = [];
+const jellyfish = [];
+const seahorses = [];
+const glowOrbs = [];
+const anemones = [];
+const loreTablets = [];
+const bubbles = [];
+const kelpBlades = [];
 let damageTextStack = 0;
+
+// ── Light rays from surface ──
+const lightRays = new THREE.Group();
+for (let i = 0; i < 18; i++) {
+  const ray = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08 + Math.random() * 0.22, 0.04, 28 + Math.random() * 18, 5),
+    new THREE.MeshBasicMaterial({ color: 0xd4f0ff, transparent: true, opacity: 0.07 + Math.random() * 0.06, side: THREE.DoubleSide })
+  );
+  const angle = (i / 18) * Math.PI * 2;
+  ray.position.set(Math.cos(angle) * (8 + Math.random() * 28), -6 + Math.random() * 6, Math.sin(angle) * (8 + Math.random() * 28));
+  ray.rotation.z = (Math.random() - 0.5) * 0.4;
+  ray.rotation.x = (Math.random() - 0.5) * 0.25;
+  lightRays.add(ray);
+}
+scene.add(lightRays);
 const keys = new Set();
 let lastTime = performance.now();
 let alienSpawnTimer = 0;
@@ -639,12 +771,145 @@ function makeOctopus() {
   octopi.push({ mesh: group, bob: Math.random() * Math.PI * 2 });
 }
 
+function makeJellyfish() {
+  const group = new THREE.Group();
+  const bellColors = [0xff88dd, 0x88ddff, 0xddffcc, 0xffcc88, 0xccaaff, 0x88ffcc];
+  const color = bellColors[Math.floor(Math.random() * bellColors.length)];
+  const bell = new THREE.Mesh(new THREE.SphereGeometry(0.65 + Math.random() * 0.4, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.MeshStandardMaterial({ color, transparent: true, opacity: 0.55, emissive: color, emissiveIntensity: 0.3, side: THREE.DoubleSide }));
+  bell.rotation.x = Math.PI;
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 }));
+  dome.position.y = 0.05;
+  dome.rotation.x = Math.PI;
+  for (let i = 0; i < 6; i++) {
+    const tentacle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.4 + Math.random() * 1.2, 0.05),
+      new THREE.MeshStandardMaterial({ color, transparent: true, opacity: 0.5 }));
+    const angle = (i / 6) * Math.PI * 2;
+    tentacle.position.set(Math.cos(angle) * 0.42, -0.8, Math.sin(angle) * 0.42);
+    tentacle.rotation.z = (Math.random() - 0.5) * 0.35;
+    group.add(tentacle);
+  }
+  group.add(bell, dome);
+  const r = 15 + Math.random() * 75;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -38 + Math.random() * 32, Math.sin(a) * r);
+  scene.add(group);
+  jellyfish.push({ mesh: group, bob: Math.random() * Math.PI * 2, phase: Math.random() * Math.PI * 2, color });
+}
+
+function makeSeahorse() {
+  const group = new THREE.Group();
+  const bodyColors = [0xffd700, 0xff8844, 0x44ddff, 0xff44bb, 0x88ff44];
+  const color = bodyColors[Math.floor(Math.random() * bodyColors.length)];
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.38, 1.1, 0.32), new THREE.MeshStandardMaterial({ color, roughness: 0.65 }));
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.42, 0.28), new THREE.MeshStandardMaterial({ color, roughness: 0.6 }));
+  const snout = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.16), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 }));
+  const curl = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.45, 0.18), new THREE.MeshStandardMaterial({ color, roughness: 0.7 }));
+  head.position.set(0.18, 0.72, 0);
+  snout.position.set(0.38, 0.62, 0);
+  curl.position.set(-0.12, -0.62, 0);
+  curl.rotation.z = 0.5;
+  group.add(body, head, snout, curl);
+  const r = 8 + Math.random() * 65;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -60 + Math.random() * 55, Math.sin(a) * r);
+  scene.add(group);
+  seahorses.push({ mesh: group, bob: Math.random() * Math.PI * 2, speed: 0.3 + Math.random() * 0.5, wanderAngle: Math.random() * Math.PI * 2 });
+}
+
+function makeGlowOrb() {
+  const colors = [0x44ffaa, 0x88aaff, 0xff66dd, 0x66ffee, 0xffee44];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  const orb = new THREE.Mesh(new THREE.SphereGeometry(0.28 + Math.random() * 0.18, 8, 8),
+    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.2, transparent: true, opacity: 0.8 }));
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.5 + Math.random() * 0.2, 8, 8),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.15 }));
+  const group = new THREE.Group();
+  group.add(orb, halo);
+  const r = 10 + Math.random() * 85;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -72 + Math.random() * 58, Math.sin(a) * r);
+  scene.add(group);
+  glowOrbs.push({ mesh: group, bob: Math.random() * Math.PI * 2, phase: Math.random() * Math.PI * 2, color });
+}
+
+function makeAnemone() {
+  const group = new THREE.Group();
+  const baseColor = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, 0.5, 8), new THREE.MeshStandardMaterial({ color: 0xff6688, roughness: 0.85 }));
+  group.add(baseColor);
+  const tentacleColors = [0xff88aa, 0xffaacc, 0xffccdd, 0xff99bb];
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const tColor = tentacleColors[Math.floor(Math.random() * tentacleColors.length)];
+    const tentacle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8 + Math.random() * 0.9, 0.08),
+      new THREE.MeshStandardMaterial({ color: tColor, roughness: 0.8 }));
+    tentacle.position.set(Math.cos(angle) * 0.28, 0.65, Math.sin(angle) * 0.28);
+    tentacle.rotation.z = (Math.random() - 0.5) * 0.5;
+    group.add(tentacle);
+  }
+  const r = 8 + Math.random() * 90;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -84.5, Math.sin(a) * r);
+  scene.add(group);
+  anemones.push({ mesh: group, bob: Math.random() * Math.PI * 2, tentacles: group.children.slice(1) });
+}
+
+const loreTexts = [
+  'The ancient axolotl warriors defended this sacred pond for centuries.',
+  'Aliens came from the black sky, drawn by the pond\'s magical waters.',
+  'Only the strongest heads can drive the invaders back.',
+  'The whale remembers the old ways. Listen to its wisdom.',
+  'Narwhals once swam these depths. Now they are rare and sacred.',
+  'The pond grows darker each day. The light must not go out.',
+  'Every worm eaten makes you stronger. Every alien bonked buys another day.',
+  'The ancient ones say: swim fast, head-butt harder, never stop.'
+];
+
+function makeLoreTablet() {
+  const group = new THREE.Group();
+  const stone = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.4, 0.28),
+    new THREE.MeshStandardMaterial({ color: 0x8a9ba8, roughness: 0.95, metalness: 0.05 }));
+  const glyphs = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.9, 0.06),
+    new THREE.MeshStandardMaterial({ color: 0x44ffcc, emissive: 0x22aa88, emissiveIntensity: 0.5 }));
+  glyphs.position.z = 0.17;
+  group.add(stone, glyphs);
+  const r = 15 + Math.random() * 70;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -83.8, Math.sin(a) * r);
+  group.rotation.y = Math.random() * Math.PI * 2;
+  scene.add(group);
+  const text = loreTexts[Math.floor(Math.random() * loreTexts.length)];
+  loreTablets.push({ mesh: group, text, read: false, bob: Math.random() * Math.PI * 2 });
+}
+
+// Animated kelp
+for (let i = 0; i < 40; i++) {
+  const color = [0x3d8b37, 0x4aaa42, 0x2d7a27, 0x5cbf4a][Math.floor(Math.random() * 4)];
+  const blade = new THREE.Mesh(
+    new THREE.BoxGeometry(0.15, 2.5 + Math.random() * 3.5, 0.12),
+    new THREE.MeshStandardMaterial({ color, roughness: 0.82 })
+  );
+  const r = 6 + Math.random() * 92;
+  const a = Math.random() * Math.PI * 2;
+  blade.position.set(Math.cos(a) * r, -83.5 + blade.geometry.parameters.height / 2, Math.sin(a) * r);
+  blade.userData.phase = Math.random() * Math.PI * 2;
+  blade.userData.speed = 0.8 + Math.random() * 0.6;
+  scene.add(blade);
+  kelpBlades.push(blade);
+}
+
 for (let i = 0; i < 5; i++) makeAlien();
 for (let i = 0; i < 18; i++) makePickup();
 for (let i = 0; i < 2; i++) makeShark();
 for (let i = 0; i < 10; i++) makeOctopus();
 for (let i = 0; i < 2; i++) makeNarwhal();
 if (Math.random() < 0.08) makeLeviathan();
+for (let i = 0; i < 7; i++) makeJellyfish();
+for (let i = 0; i < 5; i++) makeSeahorse();
+for (let i = 0; i < 12; i++) makeGlowOrb();
+for (let i = 0; i < 14; i++) makeAnemone();
+for (let i = 0; i < 4; i++) makeLoreTablet();
 
 function addXp(amount) {
   state.xp += amount;
@@ -668,6 +933,14 @@ function takeDamage(amount) {
     isGameOver = true;
     paused = true;
     pointerLocked = false;
+    const captions = [
+      'you found out huh?',
+      'the deep remembered you first.',
+      'something down here was watching.',
+      'you swam too close to the truth.',
+      'the ocean keeps what it learns.'
+    ];
+    el.gameOverCaption.textContent = captions[Math.floor(Math.random() * captions.length)];
     audio.gameOver.currentTime = 0;
     audio.gameOver.play().catch(() => {});
     document.exitPointerLock();
@@ -686,6 +959,7 @@ function buyUpgrade(key) {
   if (key === 'lungs') state.health = Math.min(config.maxHealth(), state.health + 20);
   showNotice(`${meta.name} upgraded`);
   persist();
+  refreshAxolotlVisuals();
   renderUpgradeMenu();
 }
 
@@ -850,6 +1124,11 @@ document.addEventListener('keydown', e => {
     el.closeWhaleChatBtn.click();
     return;
   }
+  if (!el.tutorialMenu.classList.contains('hidden') && e.code === 'Space') {
+    e.preventDefault();
+    el.closeTutorialBtn.click();
+    return;
+  }
   keys.add(e.code);
   if (e.code === data.options.keybinds.pause && gameStarted) {
     paused = !paused;
@@ -875,7 +1154,7 @@ renderer.domElement.addEventListener('click', () => {
   if (gameStarted && !pointerLocked && !paused) renderer.domElement.requestPointerLock();
 });
 
-el.newGameBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); startGame(false); };
+el.newGameBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); startGame(false); paused = true; openOverlay('tutorialMenu'); };
 el.continueBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); continueAllowed && startGame(true); };
 el.continueBtn.disabled = !continueAllowed;
 el.optionsBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); renderOptions(); openOverlay('optionsMenu'); };
@@ -890,6 +1169,7 @@ el.quitBtn.onclick = quitToTitle;
 el.retryBtn.onclick = () => { unlockAudio(); startGame(false); };
 el.gameOverTitleBtn.onclick = quitToTitle;
 el.closeWhaleChatBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
+el.closeTutorialBtn.onclick = () => { audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); paused = false; openOverlay(null); renderer.domElement.requestPointerLock(); };
 el.graphicsDown.onclick = () => setGraphics(-1);
 el.graphicsUp.onclick = () => setGraphics(1);
 el.soundSlider.oninput = e => { data.options.sound = Number(e.target.value); persist(); renderOptions(); };
@@ -910,7 +1190,7 @@ function updatePlayer(dt) {
   const sprintPressed = keys.has(data.options.keybinds.sprint);
 
   const flatForward = new THREE.Vector3(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
-  const right = new THREE.Vector3(flatForward.z, 0, -flatForward.x);
+  const right = new THREE.Vector3(-flatForward.z, 0, flatForward.x);
   const flatDir = new THREE.Vector3();
   if (moveInput.lengthSq() > 0) {
     moveInput.normalize();
