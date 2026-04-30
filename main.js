@@ -1312,7 +1312,6 @@ for (let i = 0; i < 40; i++) {
 }
 
 for (let i = 0; i < 18; i++) makePickup();
-for (let i = 0; i < 10; i++) makeOctopus();
 for (let i = 0; i < 7; i++) makeJellyfish();
 for (let i = 0; i < 5; i++) makeSeahorse();
 for (let i = 0; i < 12; i++) makeGlowOrb();
