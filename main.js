@@ -1306,7 +1306,6 @@ for (let i = 0; i < 40; i++) {
 
 for (let i = 0; i < 18; i++) makePickup();
 for (let i = 0; i < 10; i++) makeOctopus();
-for (let i = 0; i < 3; i++) makeNarwhal(i);
 for (let i = 0; i < 7; i++) makeJellyfish();
 for (let i = 0; i < 5; i++) makeSeahorse();
 for (let i = 0; i < 12; i++) makeGlowOrb();
@@ -1907,27 +1906,6 @@ function updatePickups(dt) {
 }
 
 function updateNarwhals(dt) {
-  for (let i = narwhals.length - 1; i >= 0; i--) {
-    const narwhal = narwhals[i];
-    narwhal.bob += dt * 6;
-    narwhal.angle += dt * narwhal.orbitSpeed;
-    narwhal.mesh.position.x = player.pos.x + Math.cos(narwhal.angle) * narwhal.orbitRadius;
-    narwhal.mesh.position.z = player.pos.z + Math.sin(narwhal.angle) * narwhal.orbitRadius;
-    narwhal.mesh.position.y = narwhal.depthOffset + Math.sin(narwhal.bob) * 1.2;
-    const ahead = new THREE.Vector3(
-      player.pos.x + Math.cos(narwhal.angle + 0.1) * narwhal.orbitRadius,
-      narwhal.depthOffset,
-      player.pos.z + Math.sin(narwhal.angle + 0.1) * narwhal.orbitRadius
-    );
-    narwhal.mesh.lookAt(ahead);
-    if (narwhal.mesh.position.distanceTo(player.pos) < narwhal.collisionRadius) {
-      narwhalBuffUntil = performance.now() + 60000;
-      showNotice('You caught the narwhals. +50% damage for 1 minute');
-      for (const pal of narwhals) scene.remove(pal.mesh);
-      narwhals.length = 0;
-      break;
-    }
-  }
 }
 
 function updateLeviathans(dt, now) {
