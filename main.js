@@ -87,7 +87,7 @@ const upgradesMeta = [
 app.innerHTML = `
 <div id="ui">
   <div id="gameOverMenu" class="overlay hidden">
-    <div class="panel thunder-panel">
+    <div class="panel">
       <h1 style="font-size:44px;color:#ff4d6d;text-shadow:0 0 18px rgba(255,0,64,0.6)">GAME OVER</h1>
       <p class="subtitle" id="gameOverCaption" style="color:#ffb3c1">you found out huh?</p>
       <div class="menu-buttons">
