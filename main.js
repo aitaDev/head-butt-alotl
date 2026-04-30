@@ -281,12 +281,13 @@ const sun = new THREE.DirectionalLight(0xffffff, 1.7);
 sun.position.set(20, 30, 10);
 scene.add(sun);
 
+// Water cylinder removed — water visual handled by fog and background color
 const water = new THREE.Mesh(
   new THREE.CylinderGeometry(140, 140, 90, data.options.graphics === 'low' ? 24 : 64),
   new THREE.MeshPhongMaterial({ color: 0x1f8fff, emissive: 0x0b4f96, transparent: true, opacity: 0.88, shininess: 45 })
 );
 water.position.y = -40;
-scene.add(water);
+// do not scene.add(water) — cylinder edge visible at spawn, replaced by background/fog
 
 const floor = new THREE.Mesh(
   new THREE.CylinderGeometry(142, 142, 8, 64),
@@ -1140,44 +1141,67 @@ function makeShark(overridePos) {
 
 function makeTuna(overridePos) {
   const group = new THREE.Group();
-  // Body: 1.8 wide(X) x 2.2 tall(Y) x 13.0 long(Z). At rotation.y=PI/2, Z→world X (forward).
-  const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.2, 13.0), new THREE.MeshStandardMaterial({ color: 0x3a6f9f, roughness: 0.65 }));
-  const belly = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.8, 11.6), new THREE.MeshStandardMaterial({ color: 0xc8dff0, roughness: 0.8 }));
-  const back = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.9, 9.0), new THREE.MeshStandardMaterial({ color: 0x2a5f8f, roughness: 0.7 }));
+  // Body: thick robust torpedo — 4.0 wide(X) x 5.5 tall(Y) x 26.0 long(Z)
+  // rotation.y=PI/2 makes local Z→world+X (forward)
+  const body = new THREE.Mesh(new THREE.BoxGeometry(4.0, 5.5, 26.0), new THREE.MeshStandardMaterial({ color: 0x2a5070, roughness: 0.6 }));
+  const belly = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.0, 23.0), new THREE.MeshStandardMaterial({ color: 0xc8e4f0, roughness: 0.7 }));
+  const back = new THREE.Mesh(new THREE.BoxGeometry(3.0, 2.5, 18.0), new THREE.MeshStandardMaterial({ color: 0x1a3a5a, roughness: 0.65 }));
+  // Main tail — large crescent shape
   const tailGroup = new THREE.Group();
-  const tailBase = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 1.0), new THREE.MeshStandardMaterial({ color: 0x2a5f8f }));
-  const tailUpper = new THREE.Mesh(new THREE.BoxGeometry(0.15, 3.6, 0.15), new THREE.MeshStandardMaterial({ color: 0x3a6f9f, roughness: 0.65 }));
-  const tailLower = tailUpper.clone();
-  const tailMid = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.8, 0.12), new THREE.MeshStandardMaterial({ color: 0x336699, roughness: 0.72 }));
-  tailUpper.position.set(0, 2.0, 0);
-  tailLower.position.set(0, -2.0, 0);
-  tailMid.position.set(0, 0, 0);
-  tailGroup.add(tailBase, tailUpper, tailLower, tailMid);
-  tailGroup.position.set(0, 0, -6.8);
-  tailGroup.rotation.z = 0.28;
-  const finTop = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.8, 2.4), new THREE.MeshStandardMaterial({ color: 0x2a5f8f, roughness: 0.7 }));
-  const finSideL = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.8, 0.2), new THREE.MeshStandardMaterial({ color: 0x336699, roughness: 0.72 }));
+  const tailNeck = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.8, 2.0), new THREE.MeshStandardMaterial({ color: 0x2a5070, roughness: 0.6 }));
+  const tailLeft = new THREE.Mesh(new THREE.BoxGeometry(0.3, 9.0, 0.3), new THREE.MeshStandardMaterial({ color: 0x2a5070, roughness: 0.6 }));
+  const tailRight = tailLeft.clone();
+  const tailLeftTip = new THREE.Mesh(new THREE.BoxGeometry(0.25, 4.5, 0.25), new THREE.MeshStandardMaterial({ color: 0x3a7090, roughness: 0.65 }));
+  const tailRightTip = tailLeftTip.clone();
+  tailLeft.position.set(0, 5.0, 0);
+  tailRight.position.set(0, -5.0, 0);
+  tailLeftTip.position.set(0, 9.5, 0);
+  tailRightTip.position.set(0, -9.5, 0);
+  tailGroup.add(tailNeck, tailLeft, tailRight, tailLeftTip, tailRightTip);
+  tailGroup.position.set(0, 0, -14.0);
+  tailGroup.rotation.z = 0.18;
+  // Dorsal fin — tall curved
+  const dorsal = new THREE.Mesh(new THREE.BoxGeometry(0.3, 7.0, 4.5), new THREE.MeshStandardMaterial({ color: 0x1a3a5a, roughness: 0.65 }));
+  const dorsalLead = new THREE.Mesh(new THREE.BoxGeometry(0.25, 4.0, 1.5), new THREE.MeshStandardMaterial({ color: 0x2a5070, roughness: 0.6 }));
+  dorsal.position.set(0, 3.5, 2.0);
+  dorsal.rotation.z = 0.15;
+  dorsalLead.position.set(0, 2.5, 4.5);
+  dorsalLead.rotation.z = 0.2;
+  // Side fins
+  const finSideL = new THREE.Mesh(new THREE.BoxGeometry(6.0, 4.5, 0.3), new THREE.MeshStandardMaterial({ color: 0x2a5070, roughness: 0.6 }));
   const finSideR = finSideL.clone();
-  const pectoralL = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.8, 0.2), new THREE.MeshStandardMaterial({ color: 0x3a6f9f, roughness: 0.7 }));
+  finSideL.position.set(2.2, -0.8, 3.0);
+  finSideR.position.set(-2.2, -0.8, 3.0);
+  finSideL.rotation.z = 0.35;
+  finSideR.rotation.z = -0.35;
+  // Pectoral fins
+  const pectoralL = new THREE.Mesh(new THREE.BoxGeometry(5.5, 1.6, 0.25), new THREE.MeshStandardMaterial({ color: 0x3a7090, roughness: 0.65 }));
   const pectoralR = pectoralL.clone();
-  const analFin = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.4, 1.2), new THREE.MeshStandardMaterial({ color: 0x2a5f8f, roughness: 0.7 }));
-  back.position.set(0, 0.6, -1.0);
-  belly.position.set(0, -0.5, -0.8);
-  finTop.position.set(0, 1.1, 1.0);
-  finSideL.position.set(0.7, -0.3, 1.6);
-  finSideR.position.set(-0.7, -0.3, 1.6);
-  pectoralL.position.set(0.9, -0.6, 0.5);
-  pectoralL.rotation.z = 0.4;
-  pectoralR.position.set(-0.9, -0.6, 0.5);
-  pectoralR.rotation.z = -0.4;
-  analFin.position.set(0, -0.6, -4.0);
-  group.add(body, belly, back, tailGroup, finTop, finSideL, finSideR, pectoralL, pectoralR, analFin);
+  pectoralL.position.set(1.8, -1.2, 1.0);
+  pectoralL.rotation.z = 0.5;
+  pectoralR.position.set(-1.8, -1.2, 1.0);
+  pectoralR.rotation.z = -0.5;
+  // Anal fin
+  const analFin = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.5, 2.5), new THREE.MeshStandardMaterial({ color: 0x1a3a5a, roughness: 0.65 }));
+  analFin.position.set(0, -2.0, -8.0);
+  // Gills / body lines
+  const gill = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.15, 0.15), new THREE.MeshStandardMaterial({ color: 0x1a3050, roughness: 0.8 }));
+  gill.position.set(0, 0.5, 5.0);
+  // Head / snout wedge
+  const snout = new THREE.Mesh(new THREE.BoxGeometry(3.4, 3.8, 4.0), new THREE.MeshStandardMaterial({ color: 0x2a5070, roughness: 0.6 }));
+  snout.position.set(0, 0.5, 13.0);
+  const snoutTip = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2.5, 2.5), new THREE.MeshStandardMaterial({ color: 0x3a7090, roughness: 0.65 }));
+  snoutTip.position.set(0, 0.3, 15.5);
+  // Eye
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.6, 8, 6), new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.4 }));
+  eye.position.set(1.8, 1.5, 12.0);
+  group.add(body, belly, back, tailGroup, dorsal, dorsalLead, finSideL, finSideR, pectoralL, pectoralR, analFin, gill, snout, snoutTip, eye);
   const r = 15 + Math.random() * 80;
   const a = Math.random() * Math.PI * 2;
   group.rotation.y = Math.PI / 2;
-  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -55 + Math.random() * 35, overridePos ? overridePos.z : Math.sin(a) * r);
+  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -50 + Math.random() * 40, overridePos ? overridePos.z : Math.sin(a) * r);
   scene.add(group);
-  tunas.push({ mesh: group, speed: 1.8 + Math.random() * 0.8, hp: 3000, bob: Math.random() * Math.PI * 2, hitCooldown: 0, collisionRadius: 9, friendly: true, wanderAngle: Math.random() * Math.PI * 2 });
+  tunas.push({ mesh: group, speed: 1.8 + Math.random() * 0.8, hp: 3000, bob: Math.random() * Math.PI * 2, hitCooldown: 0, collisionRadius: 18, friendly: true, wanderAngle: Math.random() * Math.PI * 2 });
 }
 
 function makeOctopus(overridePos) {
