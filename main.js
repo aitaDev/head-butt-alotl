@@ -2476,7 +2476,9 @@ function updateTunas(dt, now) {
     tuna.mesh.position.y += Math.sin(tuna.bob) * 0.015;
     // Face direction of travel (not at player)
     const swimDir = new THREE.Vector3(Math.cos(tuna.wanderAngle), 0, Math.sin(tuna.wanderAngle));
-    tuna.mesh.lookAt(tuna.mesh.position.clone().add(swimDir));
+    // Rotation y = -PI/2 makes the tuna face -X (forward when swimming along Z)
+    // lookAt points -Z of the group toward the target, so add reversed swimDir
+    tuna.mesh.lookAt(tuna.mesh.position.clone().add(new THREE.Vector3(-Math.cos(tuna.wanderAngle), 0, -Math.sin(tuna.wanderAngle))));
     if (tuna.mesh.position.x - player.pos.x > worldRadius) tuna.mesh.position.x -= worldRadius * 2;
     if (tuna.mesh.position.x - player.pos.x < -worldRadius) tuna.mesh.position.x += worldRadius * 2;
     if (tuna.mesh.position.z - player.pos.z > worldRadius) tuna.mesh.position.z -= worldRadius * 2;
