@@ -1140,22 +1140,23 @@ function makeShark(overridePos) {
 
 function makeTuna(overridePos) {
   const group = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(6.5, 2.2, 1.8), new THREE.MeshStandardMaterial({ color: 0x3a6f9f, roughness: 0.65 }));
-  const belly = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.8, 1.4), new THREE.MeshStandardMaterial({ color: 0xc8dff0, roughness: 0.8 }));
-  const back = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.9, 1.3), new THREE.MeshStandardMaterial({ color: 0x2a5f8f, roughness: 0.7 }));
-  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.8, 1.8), new THREE.MeshStandardMaterial({ color: 0x3a6f9f, roughness: 0.65 }));
-  const finTop = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 0.2), new THREE.MeshStandardMaterial({ color: 0x2a5f8f, roughness: 0.7 }));
-  const finSideL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.9, 1.1), new THREE.MeshStandardMaterial({ color: 0x336699, roughness: 0.72 }));
+  // Body: 1.8 wide(X) x 2.2 tall(Y) x 6.5 long(Z). At rotation.y=PI/2, Z→world X (forward).
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.2, 6.5), new THREE.MeshStandardMaterial({ color: 0x3a6f9f, roughness: 0.65 }));
+  const belly = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.8, 5.8), new THREE.MeshStandardMaterial({ color: 0xc8dff0, roughness: 0.8 }));
+  const back = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.9, 4.5), new THREE.MeshStandardMaterial({ color: 0x2a5f8f, roughness: 0.7 }));
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.8, 0.4), new THREE.MeshStandardMaterial({ color: 0x3a6f9f, roughness: 0.65 }));
+  const finTop = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.4, 1.2), new THREE.MeshStandardMaterial({ color: 0x2a5f8f, roughness: 0.7 }));
+  const finSideL = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.9, 0.2), new THREE.MeshStandardMaterial({ color: 0x336699, roughness: 0.72 }));
   const finSideR = finSideL.clone();
-  const tailBase = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.9), new THREE.MeshStandardMaterial({ color: 0x2a5f8f }));
+  const tailBase = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.5), new THREE.MeshStandardMaterial({ color: 0x2a5f8f }));
   tail.rotation.y = 0.28;
-  back.position.set(-0.5, 0.6, 0);
-  belly.position.set(-0.4, -0.5, 0);
-  finTop.position.set(0.5, 1.1, 0);
-  finSideL.position.set(0.8, -0.3, 0.7);
-  finSideR.position.set(0.8, -0.3, -0.7);
-  tail.position.set(-3.4, 0, 0);
-  tailBase.position.set(-3.0, 0, 0);
+  back.position.set(0, 0.6, -0.5);
+  belly.position.set(0, -0.5, -0.4);
+  finTop.position.set(0, 1.1, 0.5);
+  finSideL.position.set(0.7, -0.3, 0.8);
+  finSideR.position.set(-0.7, -0.3, 0.8);
+  tail.position.set(0, 0, -3.4);
+  tailBase.position.set(0, 0, -3.0);
   group.add(body, belly, back, tail, tailBase, finTop, finSideL, finSideR);
   const r = 15 + Math.random() * 80;
   const a = Math.random() * Math.PI * 2;
@@ -2476,9 +2477,10 @@ function updateTunas(dt, now) {
     tuna.mesh.position.y += Math.sin(tuna.bob) * 0.015;
     // Face direction of travel (not at player)
     const swimDir = new THREE.Vector3(Math.cos(tuna.wanderAngle), 0, Math.sin(tuna.wanderAngle));
-    // With rotation.y = PI/2, forward (local -Z) points in world +X
-    // lookAt points local -Z toward swimDir, so pass swimDir as-is
-    tuna.mesh.lookAt(tuna.mesh.position.clone().add(new THREE.Vector3(Math.cos(tuna.wanderAngle), 0, Math.sin(tuna.wanderAngle))));
+    // rotation.y=PI/2 → local Z→world+X, local -Z→world -X
+    // Forward is local +Z → world +X, so lookAt(-cos,0,-sin) aligns local -Z with (-cos,0,-sin)
+    // which makes local +Z point at (+cos,0,+sin) = swimDir
+    tuna.mesh.lookAt(tuna.mesh.position.clone().add(new THREE.Vector3(-Math.cos(tuna.wanderAngle), 0, -Math.sin(tuna.wanderAngle))));
     if (tuna.mesh.position.x - player.pos.x > worldRadius) tuna.mesh.position.x -= worldRadius * 2;
     if (tuna.mesh.position.x - player.pos.x < -worldRadius) tuna.mesh.position.x += worldRadius * 2;
     if (tuna.mesh.position.z - player.pos.z > worldRadius) tuna.mesh.position.z -= worldRadius * 2;
@@ -2792,8 +2794,8 @@ function updateKelp(dt) {
   const t = performance.now() * 0.001;
   for (const kp of kelp) {
     kp.sway += dt * kp.speed;
-    kp.mesh.rotation.z = Math.sin(kp.sway) * 0.2;
-    kp.mesh.rotation.x = Math.sin(kp.sway * 0.7) * 0.08;
+    kp.mesh.rotation.z = Math.sin(kp.sway) * 0.05;
+    kp.mesh.rotation.x = Math.sin(kp.sway * 0.7) * 0.02;
     const dx = kp.mesh.position.x - player.pos.x;
     const dz = kp.mesh.position.z - player.pos.z;
     if (Math.abs(dx) > worldRadius || Math.abs(dz) > worldRadius) {
