@@ -2109,8 +2109,8 @@ renderer.domElement.addEventListener('click', () => {
   if (gameStarted && !pointerLocked && !paused) renderer.domElement.requestPointerLock();
 });
 
-el.skinUpBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); nextSkin(1); };
-el.skinDownBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); nextSkin(-1); };
+el.skinUpBtn.onclick = () => { unlockAudio(); audio.menu.play().catch(() => {}); nextSkin(1); };
+el.skinDownBtn.onclick = () => { unlockAudio(); audio.menu.play().catch(() => {}); nextSkin(-1); };
 el.newGameBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); prepareNewGame(); storyIndex = 0; el.storyText.textContent = storyParagraphs[0]; openOverlay('storyMenu'); };
 el.continueBtn.onclick = () => { unlockAudio(); audio.menu.currentTime = 0; audio.menu.play().catch(() => {}); continueAllowed && startGame(true); };
 el.continueBtn.disabled = !continueAllowed;
