@@ -1162,7 +1162,7 @@ function makeTuna() {
   group.rotation.y = -Math.PI / 2;
   group.position.set(Math.cos(a) * r, -55 + Math.random() * 35, Math.sin(a) * r);
   scene.add(group);
-  tunas.push({ mesh: group, speed: 1.8 + Math.random() * 0.8, hp: 1000, bob: Math.random() * Math.PI * 2, hitCooldown: 0, collisionRadius: 4.5, friendly: true });
+  tunas.push({ mesh: group, speed: 1.8 + Math.random() * 0.8, hp: 1000, bob: Math.random() * Math.PI * 2, hitCooldown: 0, collisionRadius: 4.5, friendly: true, wanderAngle: Math.random() * Math.PI * 2 });
 }
 
 function makeOctopus() {
@@ -2462,21 +2462,21 @@ function updateTunas(dt, now) {
   for (let i = tunas.length - 1; i >= 0; i--) {
     const tuna = tunas[i];
     tuna.bob += dt * 1.2;
-    tuna.mesh.position.y += Math.sin(tuna.bob) * 0.012;
+    // Passive swim: move in a wandering direction, bob gently
+    tuna.wanderAngle += dt * 0.4;
+    tuna.mesh.position.x += Math.cos(tuna.wanderAngle) * tuna.speed * dt;
+    tuna.mesh.position.z += Math.sin(tuna.wanderAngle) * tuna.speed * dt;
+    tuna.mesh.position.y += Math.sin(tuna.bob) * 0.015;
+    // Face direction of travel (not at player)
+    const swimDir = new THREE.Vector3(Math.cos(tuna.wanderAngle), 0, Math.sin(tuna.wanderAngle));
+    tuna.mesh.lookAt(tuna.mesh.position.clone().add(swimDir));
     if (tuna.mesh.position.x - player.pos.x > worldRadius) tuna.mesh.position.x -= worldRadius * 2;
     if (tuna.mesh.position.x - player.pos.x < -worldRadius) tuna.mesh.position.x += worldRadius * 2;
     if (tuna.mesh.position.z - player.pos.z > worldRadius) tuna.mesh.position.z -= worldRadius * 2;
     if (tuna.mesh.position.z - player.pos.z < -worldRadius) tuna.mesh.position.z += worldRadius * 2;
-    const dx = tuna.mesh.position.x - player.pos.x;
-    const dz = tuna.mesh.position.z - player.pos.z;
-    if (Math.abs(dx) > worldRadius || Math.abs(dz) > worldRadius) {
-      tuna.mesh.position.x = player.pos.x + (Math.random() - 0.5) * worldRadius * 1.6;
-      tuna.mesh.position.z = player.pos.z + (Math.random() - 0.5) * worldRadius * 1.6;
-    }
-    const toPlayer = player.pos.clone().sub(tuna.mesh.position);
-    const dist = toPlayer.length();
-    if (dist > 0.001) tuna.mesh.position.addScaledVector(toPlayer.normalize(), tuna.speed * hostileSpeedMultiplier * dt);
-    tuna.mesh.lookAt(player.pos);
+    if (tuna.mesh.position.y < -55) tuna.mesh.position.y = -55 + Math.random() * 10;
+    if (tuna.mesh.position.y > -20) tuna.mesh.position.y = -30 + Math.random() * 10;
+    const dist = tuna.mesh.position.distanceTo(player.pos);
     if (dist < (tuna.collisionRadius + player.radius)) {
       resolveSolidCollision(player.pos, tuna.mesh.position, tuna.collisionRadius + player.radius);
       if (!tuna.hitCooldown || now - tuna.hitCooldown > 200) {
