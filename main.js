@@ -1185,7 +1185,7 @@ function updateAnglerfish(dt, now) {
       addXp(28);
       spawnRipple(af.mesh.position, af.lureColor || 0x00ffcc);
       showNotice('🐟 Anglerfish defeated! Deep sea champion! +28 XP');
-      setTimeout(() => { if (gameStarted && anglerfish.length < 2) makeAnglerfish(); }, 8000);
+      setTimeout(() => { if (gameStarted && anglerfish.length < 1) makeAnglerfish(); }, 10000);
       continue;
     }
   }
@@ -1287,12 +1287,12 @@ for (let i = 0; i < 40; i++) {
   kelpBlades.push(blade);
 }
 
-for (let i = 0; i < 5; i++) makeAlien();
+for (let i = 0; i < 3; i++) makeAlien();
 for (let i = 0; i < 18; i++) makePickup();
-for (let i = 0; i < 2; i++) makeShark();
+for (let i = 0; i < 1; i++) makeShark();
 for (let i = 0; i < 10; i++) makeOctopus();
 for (let i = 0; i < 2; i++) makeNarwhal();
-if (Math.random() < 0.08) makeLeviathan();
+if (Math.random() < 0.03) makeLeviathan();
 for (let i = 0; i < 7; i++) makeJellyfish();
 for (let i = 0; i < 5; i++) makeSeahorse();
 for (let i = 0; i < 12; i++) makeGlowOrb();
@@ -1303,7 +1303,7 @@ for (let i = 0; i < 7; i++) makeCrab();
 for (let i = 0; i < 9; i++) makeStarfish();
 for (let i = 0; i < 6; i++) makeCrystal();
 for (let i = 0; i < 4; i++) makeKraken();
-for (let i = 0; i < 2; i++) makeAnglerfish();
+for (let i = 0; i < 1; i++) makeAnglerfish();
 for (let i = 0; i < 10; i++) makePearl();
 for (let i = 0; i < 8; i++) makePlanktonPatch();
 makeDepthZones();
@@ -1799,7 +1799,7 @@ document.addEventListener('mouseup', e => { if (e.button === 0) keys.delete('Mou
 
 function updateAliens(dt, now) {
   alienSpawnTimer += dt;
-  if (alienSpawnTimer > 6 && aliens.length < 10) { alienSpawnTimer = 0; makeAlien(); }
+  if (alienSpawnTimer > 7.5 && aliens.length < 6) { alienSpawnTimer = 0; makeAlien(); }
   for (const alien of aliens) {
     if (alien.mesh.position.x - player.pos.x > worldRadius) alien.mesh.position.x -= worldRadius * 2;
     if (alien.mesh.position.x - player.pos.x < -worldRadius) alien.mesh.position.x += worldRadius * 2;
