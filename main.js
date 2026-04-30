@@ -70,9 +70,9 @@ const state = {
 };
 
 const skins = [
-  { name: 'Bluey',      body: 0x5bb8f5, stripe: 0x3a8fd4, head: 0x88c8ff, gills: 0x3399e6, legs: 0x4499e0, tail: 0x88c4ff },
+  { name: 'Bluey Blue', body: 0x5bb8f5, stripe: 0x3a8fd4, head: 0x88c8ff, gills: 0x3399e6, legs: 0x4499e0, tail: 0x88c4ff },
   { name: 'Dazi Pink', body: 0xff9ecf, stripe: 0xf58cbc, head: 0xffadd7, gills: 0xff5ca8, legs: 0xff8fca, tail: 0xffbddf },
-  { name: 'Shrek',     body: 0x78dd55, stripe: 0x5cb83a, head: 0x99ee77, gills: 0x44aa33, legs: 0x55bb44, tail: 0x88dd66 }
+  { name: 'Shrek Green', body: 0x78dd55, stripe: 0x5cb83a, head: 0x99ee77, gills: 0x44aa33, legs: 0x55bb44, tail: 0x88dd66 }
 ];
 let currentSkinIndex = 1;
 
