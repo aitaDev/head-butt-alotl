@@ -852,9 +852,9 @@ function makeOctopus() {
     group.add(arm);
   }
   group.add(head);
-  const r = 12 + Math.random() * 90;
+  const r = 10 + Math.random() * 70;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(Math.cos(a) * r, -82, Math.sin(a) * r);
+  group.position.set(Math.cos(a) * r, -52 + Math.random() * 22, Math.sin(a) * r);
   scene.add(group);
   octopi.push({ mesh: group, bob: Math.random() * Math.PI * 2 });
 }
