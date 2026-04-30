@@ -1176,7 +1176,7 @@ function makeTuna(overridePos) {
   tailLeftFluke.rotation.z = 0.2;
   tailRightFluke.rotation.z = -0.2;
   tailGroup.add(tailStem, tailLeft, tailRight, tailLeftFluke, tailRightFluke);
-  tailGroup.position.set(0, 0, -16.5);
+  tailGroup.position.set(0, 0, 16.5);
   tailGroup.rotation.z = 0.55;
   // Tall singular dorsal fin — iconic tuna shape
   const dorsal = new THREE.Mesh(new THREE.BoxGeometry(0.35, 9.0, 5.5), new THREE.MeshStandardMaterial({ color: 0x336688, roughness: 0.6 }));
@@ -1199,17 +1199,17 @@ function makeTuna(overridePos) {
   const stripeA = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.18, 0.18), new THREE.MeshStandardMaterial({ color: 0x2a5577, roughness: 0.75 }));
   const stripeB = stripeA.clone();
   const stripeC = stripeA.clone();
-  stripeA.position.set(0, 2.2, 5.0);
-  stripeB.position.set(0, 0.8, 5.0);
-  stripeC.position.set(0, -0.5, 5.0);
+  stripeA.position.set(0, 2.2, -5.0);
+  stripeB.position.set(0, 0.8, -5.0);
+  stripeC.position.set(0, -0.5, -5.0);
   // Head
   const headMesh = new THREE.Mesh(new THREE.BoxGeometry(4.6, 4.8, 7.0), new THREE.MeshStandardMaterial({ color: 0x5588aa, roughness: 0.55 }));
-  headMesh.position.set(0, 0.4, 17.5);
+  headMesh.position.set(0, 0.4, -17.5);
   const snout = new THREE.Mesh(new THREE.BoxGeometry(3.0, 3.2, 5.0), new THREE.MeshStandardMaterial({ color: 0x4477aa, roughness: 0.58 }));
-  snout.position.set(0, 0.2, 21.0);
+  snout.position.set(0, 0.2, -21.0);
   // Eye
   const eye = new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 6), new THREE.MeshStandardMaterial({ color: 0xffee00, roughness: 0.4 }));
-  eye.position.set(2.2, 1.2, 18.5);
+  eye.position.set(-2.2, 1.2, -18.5);
   // Second smaller dorsal fin (rear)
   const dorsal2 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.5, 2.0), new THREE.MeshStandardMaterial({ color: 0x336688, roughness: 0.6 }));
   dorsal2.position.set(0, 3.0, -5.0);
@@ -2533,7 +2533,9 @@ function updateTunas(dt, now) {
     tuna.mesh.position.y += Math.sin(tuna.bob) * 0.015;
     // rotation.y=PI/2: local Z→world+X, local -Z→world -X
     // lookAt(-cos,0,-sin) points local -Z at (-cos,0,-sin) → local +Z points at (+cos,0,+sin) = swimDir
-    tuna.mesh.lookAt(tuna.mesh.position.clone().add(new THREE.Vector3(-Math.cos(tuna.wanderAngle), 0, -Math.sin(tuna.wanderAngle))));
+    // Tail at +Z local (world+X forward), head at -Z local (world-X backward)
+    // lookAt(+cos,0,+sin) points local -Z at swimDir → local +Z (tail) leads
+    tuna.mesh.lookAt(tuna.mesh.position.clone().add(new THREE.Vector3(Math.cos(tuna.wanderAngle), 0, Math.sin(tuna.wanderAngle))));
     if (tuna.mesh.position.x - player.pos.x > worldRadius) tuna.mesh.position.x -= worldRadius * 2;
     if (tuna.mesh.position.x - player.pos.x < -worldRadius) tuna.mesh.position.x += worldRadius * 2;
     if (tuna.mesh.position.z - player.pos.z > worldRadius) tuna.mesh.position.z -= worldRadius * 2;
