@@ -1511,7 +1511,7 @@ function setGraphics(delta) {
 function openOverlay(id) {
   for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu', 'patchNotesMenu', 'tutorialMenu', 'upgradeHintMenu', 'storyMenu']) el[key].classList.add('hidden');
   if (id) el[id].classList.remove('hidden');
-  if (renderer?.domElement) renderer.domElement.style.opacity = id === 'mainMenu' ? '0' : '1';
+  if (renderer?.domElement) renderer.domElement.style.opacity = (id === 'mainMenu' || id === 'storyMenu' || id === 'tutorialMenu') ? '0' : '1';
 }
 
 function startGame(continueGame = false) {
