@@ -1002,6 +1002,7 @@ function makeUrchin() {
   group.add(body);
   const r = 10 + Math.random() * 88; const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -83.5, Math.sin(a) * r);
+  group.scale.setScalar(2);
   scene.add(group);
   urchins.push({ mesh: group, hp: (18 + Math.random() * 12) * 2, bob: Math.random() * Math.PI * 2, hitCooldown: 0 });
 }
@@ -2388,7 +2389,7 @@ function updateSeabedCreatures(dt, now) {
   // Sea urchins — spike damage on contact, like touching coral
   for (const urchin of urchins) {
     urchin.bob += dt * 1.3;
-    urchin.mesh.position.y = -83.5 + Math.sin(urchin.bob) * 0.05;
+    urchin.mesh.position.y = -82.0 + Math.sin(urchin.bob) * 0.05;
     urchin.mesh.rotation.y += dt * 0.4;
     const dx = urchin.mesh.position.x - player.pos.x;
     const dz = urchin.mesh.position.z - player.pos.z;
@@ -2397,9 +2398,9 @@ function updateSeabedCreatures(dt, now) {
     if (urchin.hitCooldown > 0) urchin.hitCooldown -= dt;
     const dist = urchin.mesh.position.distanceTo(player.pos);
     if (dist < 1.8 + player.radius) {
-      resolveSolidCollision(player.pos, urchin.mesh.position, 1.8 + player.radius);
+      resolveSolidCollision(player.pos, urchin.mesh.position, 3.6 + player.radius);
       if (urchin.hitCooldown <= 0) {
-        takeDamage(4 * dt, 'a sea urchin');
+        takeDamage(8 * dt, 'a sea urchin');
         if (debugGodMode && urchin.hp > 0) {
           scene.remove(urchin.mesh);
           urchins.splice(j, 1);
