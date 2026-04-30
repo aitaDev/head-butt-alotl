@@ -1159,7 +1159,7 @@ function makeTuna(overridePos) {
   group.add(body, belly, back, tail, tailBase, finTop, finSideL, finSideR);
   const r = 15 + Math.random() * 80;
   const a = Math.random() * Math.PI * 2;
-  group.rotation.y = -Math.PI / 2;
+  group.rotation.y = Math.PI / 2;
   group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -55 + Math.random() * 35, overridePos ? overridePos.z : Math.sin(a) * r);
   scene.add(group);
   tunas.push({ mesh: group, speed: 1.8 + Math.random() * 0.8, hp: 1000, bob: Math.random() * Math.PI * 2, hitCooldown: 0, collisionRadius: 4.5, friendly: true, wanderAngle: Math.random() * Math.PI * 2 });
@@ -2476,9 +2476,9 @@ function updateTunas(dt, now) {
     tuna.mesh.position.y += Math.sin(tuna.bob) * 0.015;
     // Face direction of travel (not at player)
     const swimDir = new THREE.Vector3(Math.cos(tuna.wanderAngle), 0, Math.sin(tuna.wanderAngle));
-    // Rotation y = -PI/2 makes the tuna face -X (forward when swimming along Z)
-    // lookAt points -Z of the group toward the target, so add reversed swimDir
-    tuna.mesh.lookAt(tuna.mesh.position.clone().add(new THREE.Vector3(-Math.cos(tuna.wanderAngle), 0, -Math.sin(tuna.wanderAngle))));
+    // With rotation.y = PI/2, forward (local -Z) points in world +X
+    // lookAt points local -Z toward swimDir, so pass swimDir as-is
+    tuna.mesh.lookAt(tuna.mesh.position.clone().add(new THREE.Vector3(Math.cos(tuna.wanderAngle), 0, Math.sin(tuna.wanderAngle))));
     if (tuna.mesh.position.x - player.pos.x > worldRadius) tuna.mesh.position.x -= worldRadius * 2;
     if (tuna.mesh.position.x - player.pos.x < -worldRadius) tuna.mesh.position.x += worldRadius * 2;
     if (tuna.mesh.position.z - player.pos.z > worldRadius) tuna.mesh.position.z -= worldRadius * 2;
