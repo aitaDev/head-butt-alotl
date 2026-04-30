@@ -65,7 +65,7 @@ const state = {
 
 const config = {
   moveSpeed: () => 7 + state.upgrades.fins * 1.4,
-  ramPower: () => 18 + state.upgrades.head * 6,
+  ramPower: () => 10 + state.level * 1.75 + state.upgrades.head * 7,
   maxHealth: () => 100 + state.upgrades.lungs * 20,
   pickupRadius: () => 1.4 + state.upgrades.bite * 0.25,
   accel: () => 5.8 + state.upgrades.fins * 0.6,

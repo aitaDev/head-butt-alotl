@@ -67,13 +67,13 @@ h1, h2, h3, p { margin-top: 0; }
 .subtitle { color: #a7bbd8; margin-bottom: 20px; }
 .menu-buttons, .stack { display: grid; gap: 12px; }
 button {
-  appearance: none; border: 1px solid rgba(180,235,255,0.3); border-radius: 6px; padding: 14px 16px; cursor: pointer;
-  background: linear-gradient(180deg, #5aaeff, #2563d6); color: white; font-weight: 700; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
-  box-shadow: 0 8px 24px rgba(20,90,200,0.25); transition: transform 0.08s ease, filter 0.15s ease, border-color 0.15s ease;
+  appearance: none; border: 2px solid rgba(150,225,255,0.35); border-radius: 2px; padding: 14px 16px; cursor: pointer;
+  background: linear-gradient(180deg, #3bc8ff, #1b5fc6); color: white; font-family: 'Press Start 2P', monospace; font-weight: 700; font-size: 10px; letter-spacing: 0; text-transform: uppercase;
+  box-shadow: 0 6px 0 rgba(10,38,86,0.9), 0 10px 24px rgba(20,90,200,0.22); transition: transform 0.08s ease, filter 0.15s ease, border-color 0.15s ease;
 }
 button:hover { filter: brightness(1.08); border-color: rgba(220,245,255,0.55); }
-button:active { transform: translateY(1px) scale(0.995); }
-button.secondary { background: linear-gradient(180deg, #244268, #132743); }
+button:active { transform: translateY(2px); box-shadow: 0 4px 0 rgba(10,38,86,0.9), 0 8px 18px rgba(20,90,200,0.18); }
+button.secondary { background: linear-gradient(180deg, #287aa0, #18415f); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 #versionTag {
   margin-top: 16px;
