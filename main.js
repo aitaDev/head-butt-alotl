@@ -420,7 +420,7 @@ for (let i = 0; i < 180; i++) {
   }
 
   const scale = 0.8 + Math.random() * 3.6;
-  const actualScale = i % 8 === 0 ? scale * (2.5 + Math.random() * 2.5) : scale;
+  const actualScale = i % 100 === 0 ? scale * (2.5 + Math.random() * 2.5) : scale;
   group.scale.setScalar(actualScale);
   const r = 12 + Math.random() * 75;
   const a = Math.random() * Math.PI * 2;
@@ -444,7 +444,7 @@ for (let i = 0; i < 60; i++) {
 }
 
 const kelp = [];
-for (let i = 0; i < 40; i++) {
+for (let i = 0; i < 18; i++) {
   const h = 30 + Math.random() * 55;
   const segments = Math.floor(h / 2.5);
   const group = new THREE.Group();
@@ -469,7 +469,7 @@ for (let i = 0; i < 40; i++) {
   }
   const r = 8 + Math.random() * 85;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(Math.cos(a) * r, -83 + h / 2, Math.sin(a) * r);
+  group.position.set(Math.cos(a) * r, -86, Math.sin(a) * r);
   kelp.push({ mesh: group, sway: Math.random() * Math.PI * 2, speed: 0.6 + Math.random() * 0.5 });
   scene.add(group);
 }
