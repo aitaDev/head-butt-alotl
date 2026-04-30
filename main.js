@@ -312,30 +312,113 @@ for (let i = 0; i < 260; i++) {
 const coral = [];
 for (let i = 0; i < 90; i++) {
   const group = new THREE.Group();
-  const colors = [0xff7aa2, 0xff9966, 0xa66cff, 0xffcc66, 0x66e0ff, 0xff6680];
+  const colors = [0xff7aa2, 0xff9966, 0xa66cff, 0xffcc66, 0x66e0ff, 0xff6680, 0xffaa55, 0x55ffcc, 0xff55aa, 0x99ff55];
   const color = colors[i % colors.length];
-  const branchCount = 4 + Math.floor(Math.random() * 6);
-  for (let j = 0; j < branchCount; j++) {
-    const h = 1.4 + Math.random() * 6.5;
-    const branch = new THREE.Mesh(
-      new THREE.BoxGeometry(0.35 + Math.random() * 0.5, h, 0.35 + Math.random() * 0.5),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.86 })
-    );
-    const angle = (j / branchCount) * Math.PI * 2;
-    const radius = Math.random() * 1.4;
-    branch.position.set(Math.cos(angle) * radius, h / 2, Math.sin(angle) * radius);
-    branch.rotation.z = (Math.random() - 0.5) * 0.5;
-    branch.rotation.x = (Math.random() - 0.5) * 0.25;
-    group.add(branch);
-    if (Math.random() > 0.45) {
-      const nub = new THREE.Mesh(
-        new THREE.BoxGeometry(0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5),
-        new THREE.MeshStandardMaterial({ color, roughness: 0.82 })
+  const type = i % 6;
+
+  if (type === 0) {
+    // Branching coral — original style
+    const branchCount = 4 + Math.floor(Math.random() * 6);
+    for (let j = 0; j < branchCount; j++) {
+      const h = 1.4 + Math.random() * 6.5;
+      const branch = new THREE.Mesh(
+        new THREE.BoxGeometry(0.35 + Math.random() * 0.5, h, 0.35 + Math.random() * 0.5),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.86 })
       );
-      nub.position.set(branch.position.x + (Math.random() - 0.5) * 0.6, h + (Math.random() - 0.2) * 0.8, branch.position.z + (Math.random() - 0.5) * 0.6);
-      group.add(nub);
+      const angle = (j / branchCount) * Math.PI * 2;
+      const radius = Math.random() * 1.4;
+      branch.position.set(Math.cos(angle) * radius, h / 2, Math.sin(angle) * radius);
+      branch.rotation.z = (Math.random() - 0.5) * 0.5;
+      branch.rotation.x = (Math.random() - 0.5) * 0.25;
+      group.add(branch);
+      if (Math.random() > 0.45) {
+        const nub = new THREE.Mesh(
+          new THREE.BoxGeometry(0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5),
+          new THREE.MeshStandardMaterial({ color, roughness: 0.82 })
+        );
+        nub.position.set(branch.position.x + (Math.random() - 0.5) * 0.6, h + (Math.random() - 0.2) * 0.8, branch.position.z + (Math.random() - 0.5) * 0.6);
+        group.add(nub);
+      }
+    }
+  } else if (type === 1) {
+    // Fan coral — wide flat discs stacked
+    const discCount = 2 + Math.floor(Math.random() * 4);
+    for (let d = 0; d < discCount; d++) {
+      const disc = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.5 + Math.random() * 1.2, 1.5 + Math.random() * 1.2, 0.18, 10),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.75 })
+      );
+      disc.position.y = d * 1.4;
+      disc.rotation.y = Math.random() * Math.PI;
+      group.add(disc);
+    }
+  } else if (type === 2) {
+    // Brain coral — large round bumpy sphere
+    const body = new THREE.Mesh(
+      new THREE.SphereGeometry(1.4 + Math.random() * 1.0, 10, 8),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.88 })
+    );
+    group.add(body);
+    for (let b = 0; b < 8; b++) {
+      const bump = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25 + Math.random() * 0.2, 6, 5),
+        new THREE.MeshStandardMaterial({ color: color + 0x111111, roughness: 0.9 })
+      );
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI;
+      bump.position.set(Math.sin(phi) * Math.cos(theta) * 1.4, Math.cos(phi) * 1.4, Math.sin(phi) * Math.sin(theta) * 1.4);
+      group.add(bump);
+    }
+  } else if (type === 3) {
+    // Tube coral — cluster of tall thin tubes
+    const tubeCount = 3 + Math.floor(Math.random() * 4);
+    for (let t = 0; t < tubeCount; t++) {
+      const h = 2.5 + Math.random() * 5.0;
+      const tube = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12 + Math.random() * 0.1, 0.18 + Math.random() * 0.12, h, 6),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.72 })
+      );
+      tube.position.set((Math.random() - 0.5) * 2.0, h / 2, (Math.random() - 0.5) * 2.0);
+      tube.rotation.z = (Math.random() - 0.5) * 0.3;
+      tube.rotation.x = (Math.random() - 0.5) * 0.3;
+      group.add(tube);
+    }
+  } else if (type === 4) {
+    // Plate coral — stacked flat disc plates
+    const plateCount = 2 + Math.floor(Math.random() * 5);
+    for (let p = 0; p < plateCount; p++) {
+      const plate = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.8 + Math.random() * 2.2, 1.2 + Math.random() * 1.8, 0.22, 8),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.8 })
+      );
+      plate.position.y = p * 0.55;
+      plate.rotation.y = p * (Math.PI / plateCount);
+      group.add(plate);
+    }
+  } else {
+    // Antler coral — tall branching with rounded tips
+    const antlerCount = 2 + Math.floor(Math.random() * 3);
+    for (let a = 0; a < antlerCount; a++) {
+      const h = 3.5 + Math.random() * 5.0;
+      const antler = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08 + Math.random() * 0.08, 0.22 + Math.random() * 0.15, h, 6),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
+      );
+      const angle = (a / antlerCount) * Math.PI * 2;
+      antler.position.set(Math.cos(angle) * 1.0, h / 2, Math.sin(angle) * 1.0);
+      antler.rotation.z = Math.cos(angle) * 0.4;
+      antler.rotation.x = Math.sin(angle) * 0.4;
+      group.add(antler);
+      // Rounded tip
+      const tip = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2 + Math.random() * 0.12, 6, 5),
+        new THREE.MeshStandardMaterial({ color: color + 0x222222, roughness: 0.65 })
+      );
+      tip.position.set(Math.cos(angle) * 1.0, h + 0.1, Math.sin(angle) * 1.0);
+      group.add(tip);
     }
   }
+
   const scale = 0.8 + Math.random() * 3.6;
   group.scale.setScalar(scale);
   const r = 12 + Math.random() * 90;
