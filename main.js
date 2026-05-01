@@ -45,6 +45,7 @@ const defaults = {
     level: 1,
     currency: 0,
     health: 100,
+    gameMode: 'survival',
     upgrades: { fins: 0, head: 0, lungs: 0, bite: 0 },
     stats: { aliensBonked: 0, wormsEaten: 0, steakEaten: 0 }
   }
@@ -65,9 +66,14 @@ const state = {
   level: data.save.level,
   currency: 0,
   health: data.save.health,
+  gameMode: data.save.gameMode || 'survival',
   upgrades: { ...data.save.upgrades },
   stats: { ...data.save.stats }
 };
+
+function isPeacefulMode() {
+  return state.gameMode === 'peaceful';
+}
 
 const skins = [
   { name: 'Bluey Blue', body: 0x5bb8f5, stripe: 0x3a8fd4, head: 0x88c8ff, gills: 0x3399e6, legs: 0x4499e0, tail: 0x88c4ff },
@@ -186,6 +192,17 @@ app.innerHTML = `
           <button id="skinDownBtn" class="skin-arrow">▶</button>
         </div>
         <div id="menuPreview"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameModeMenu" class="overlay hidden">
+    <div class="panel" style="max-width:520px;text-align:center">
+      <h2>Choose Game Mode</h2>
+      <p class="subtitle">Pick how you want to play.</p>
+      <div class="menu-buttons">
+        <button id="survivalModeBtn">Survival</button>
+        <button id="peacefulModeBtn" class="secondary">Peaceful</button>
       </div>
     </div>
   </div>
@@ -317,7 +334,7 @@ function loadData() {
 }
 
 function persist() {
-  data.save = { hasSave: true, xp: state.xp, level: state.level, currency: state.currency, health: state.health, upgrades: state.upgrades, stats: state.stats };
+  data.save = { hasSave: true, xp: state.xp, level: state.level, currency: state.currency, health: state.health, gameMode: state.gameMode, upgrades: state.upgrades, stats: state.stats };
   localStorage.setItem(saveKey, JSON.stringify(data));
 }
 
@@ -327,6 +344,13 @@ function resetState() {
   Object.assign(state, structuredClone(defaults.save));
   state.health = config.maxHealth();
   persist();
+}
+
+function clearHostileMobs() {
+  for (const list of [aliens, sharks, anglerfish, leviathans, octopi, crabs, urchins]) {
+    for (const item of list) scene.remove(item.mesh);
+    list.length = 0;
+  }
 }
 
 const scene = new THREE.Scene();
@@ -1049,10 +1073,11 @@ function playMenuClick() {
 }
 
 function makeAlien(overridePos = null) {
+  if (isPeacefulMode()) return;
   const group = new THREE.Group();
   const types = [
     { name: 'grunt', body: 0x88d66f, head: 0x8cf07d, belly: 0xb8f29a, horn: true, arms: true, scaleMin: 0.6, scaleMax: 1.4, hp: 1, speed: 1.1, damage: 1 },
-    ...(state.level >= 5 ? [{ name: 'brute', body: 0x5678ff, head: 0x7a92ff, belly: 0xb7c2ff, horn: false, arms: true, scaleMin: 1.8, scaleMax: 3.4, hp: 2.8, speed: 0.7, damage: 2.7 }] : []),
+    ...(state.level >= 6 ? [{ name: 'brute', body: 0x5678ff, head: 0x7a92ff, belly: 0xb7c2ff, horn: false, arms: true, scaleMin: 1.8, scaleMax: 3.4, hp: 2.8, speed: 0.7, damage: 2.7 }] : []),
     { name: 'spike', body: 0xd66f88, head: 0xf08ca8, belly: 0xf2b8c9, horn: true, arms: false, scaleMin: 0.9, scaleMax: 2.1, hp: 1.6, speed: 1.0, damage: 1.8 },
     { name: 'tiny', body: 0xe0d45a, head: 0xf7ed8e, belly: 0xfff6b8, horn: false, arms: true, scaleMin: 0.35, scaleMax: 0.7, hp: 0.55, speed: 1.6, damage: 0.55 }
   ];
@@ -1244,6 +1269,7 @@ function makeNarwhal(index = narwhals.length) {
 }
 
 function makeLeviathan(overridePos) {
+  if (isPeacefulMode()) return;
   const group = new THREE.Group();
   const body = new THREE.Mesh(new THREE.BoxGeometry(28, 8, 8), new THREE.MeshStandardMaterial({ color: 0x2f4358, roughness: 0.72 }));
   const fin = new THREE.Mesh(new THREE.BoxGeometry(2, 6, 1.2), new THREE.MeshStandardMaterial({ color: 0x394f66 }));
@@ -1261,6 +1287,7 @@ function makeLeviathan(overridePos) {
 }
 
 function makeShark(overridePos) {
+  if (isPeacefulMode()) return;
   const group = new THREE.Group();
   const body = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.35, 1.35), new THREE.MeshStandardMaterial({ color: 0x6f8897, roughness: 0.7 }));
   const back = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.55, 1.05), new THREE.MeshStandardMaterial({ color: 0x5f7685, roughness: 0.78 }));
@@ -1355,6 +1382,7 @@ function makeTuna(overridePos) {
 }
 
 function makeOctopus(overridePos) {
+  if (isPeacefulMode()) return;
   const group = new THREE.Group();
   const body = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.2, 2.8), new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 0.75 }));
   const bodyStripe = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.25, 2.7), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 }));
@@ -1500,6 +1528,7 @@ function makeUrchin(overridePos) {
 }
 
 function makeCrab(overridePos) {
+  if (isPeacefulMode()) return;
   const group = new THREE.Group();
   const shellColor = 0xd4451a + Math.floor(Math.random() * 3) * 0x111100;
   const shell = new THREE.Mesh(new THREE.SphereGeometry(0.52, 10, 8),
@@ -1591,6 +1620,7 @@ function makeKraken() {
 }
 
 function makeAnglerfish(overridePos) {
+  if (isPeacefulMode()) return;
   const group = new THREE.Group();
   const bodyColor = 0x1a1a2e;
   // Main body — elongated and deep
@@ -1657,6 +1687,7 @@ function makeAnglerfish(overridePos) {
 }
 
 function updateAnglerfish(dt, now) {
+  if (isPeacefulMode()) return;
   anglerSpawnTimer += dt;
   const elapsed = (performance.now() - roundStartedAt) / 1000;
   if (state.level >= 5 && elapsed >= 150 && anglerfish.length < 1 && anglerSpawnTimer > 25) {
@@ -2058,7 +2089,7 @@ function setGraphics(delta) {
 }
 
 function openOverlay(id) {
-  for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu', 'patchNotesMenu', 'creditsMenu', 'tutorialMenu', 'upgradeHintMenu', 'storyMenu', 'debugMenu']) el[key].classList.add('hidden');
+  for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu', 'gameModeMenu', 'patchNotesMenu', 'creditsMenu', 'tutorialMenu', 'upgradeHintMenu', 'storyMenu', 'debugMenu']) el[key].classList.add('hidden');
   if (id) el[id].classList.remove('hidden');
   if (renderer?.domElement) renderer.domElement.style.opacity = (id === 'mainMenu' || id === 'storyMenu' || id === 'tutorialMenu') ? '0' : '1';
   if (id === 'mainMenu') applySkin(currentSkinIndex);
@@ -2089,8 +2120,10 @@ function startGame(continueGame = false) {
   el.continueBtn.disabled = false;
 }
 
-function prepareNewGame() {
+function prepareNewGame(mode = 'survival') {
   resetState();
+  state.gameMode = mode;
+  if (isPeacefulMode()) clearHostileMobs();
   state.health = Math.min(config.maxHealth(), state.health || config.maxHealth());
   player.pos.set(0, -35, 0);
   player.verticalVelocity = 0;
@@ -2249,8 +2282,10 @@ renderer.domElement.addEventListener('click', () => {
 
 el.skinUpBtn.onclick = () => { playMenuClick(); nextSkin(1); };
 el.skinDownBtn.onclick = () => { playMenuClick(); nextSkin(-1); };
-el.newGameBtn.onclick = () => { playMenuClick(); prepareNewGame(); storyIndex = 0; el.storyText.textContent = storyParagraphs[0]; openOverlay('storyMenu'); };
+el.newGameBtn.onclick = () => { playMenuClick(); openOverlay('gameModeMenu'); };
 el.continueBtn.onclick = () => { playMenuClick(); continueAllowed && startGame(true); };
+el.survivalModeBtn.onclick = () => { playMenuClick(); prepareNewGame('survival'); storyIndex = 0; el.storyText.textContent = storyParagraphs[0]; openOverlay('storyMenu'); };
+el.peacefulModeBtn.onclick = () => { playMenuClick(); prepareNewGame('peaceful'); storyIndex = 0; el.storyText.textContent = storyParagraphs[0]; openOverlay('storyMenu'); };
 el.continueBtn.disabled = !continueAllowed;
 el.optionsBtn.onclick = () => { playMenuClick(); renderOptions(); openOverlay('optionsMenu'); };
 el.pauseOptionsBtn.onclick = () => { playMenuClick(); renderOptions(); openOverlay('optionsMenu'); };
@@ -2479,6 +2514,7 @@ if (isFork) {
 }
 
 function updateAliens(dt, now) {
+  if (isPeacefulMode()) return;
   alienSpawnTimer += dt;
   const elapsed = (performance.now() - roundStartedAt) / 1000;
   let targetAliens = 0;
@@ -2623,6 +2659,7 @@ function updateLeviathans(dt, now) {
 }
 
 function updateSharks(dt, now) {
+  if (isPeacefulMode()) return;
   sharkSpawnTimer += dt;
   const elapsed = (performance.now() - roundStartedAt) / 1000;
   if (state.level >= 3 && elapsed >= 90 && sharks.length < 1 && sharkSpawnTimer > 20) {
@@ -2745,6 +2782,7 @@ function updateTunas(dt, now) {
 }
 
 function updateOctopi(dt, now) {
+  if (isPeacefulMode()) return;
   octopiSpawnTimer += dt;
   const elapsed = (performance.now() - roundStartedAt) / 1000;
   if (elapsed >= 120 && octopi.length < 2 && octopiSpawnTimer > 25) {
@@ -3042,6 +3080,7 @@ animate(performance.now());
 
 // ── Seabed creature interactions ──
 function updateSeabedCreatures(dt, now) {
+  if (isPeacefulMode()) return;
   // Sea urchins — spike damage on contact, like touching coral
   for (const urchin of urchins) {
     urchin.bob += dt * 1.3;
