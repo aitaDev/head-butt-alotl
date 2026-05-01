@@ -2,8 +2,8 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 
 const app = document.getElementById('app');
 const saveKey = 'axolotl-alien-fighter-save';
-const gameVersion = 'v0.5.2';
-const isFork = false;
+const gameVersion = 'v0.5.2-debug';
+const isFork = true;
 let debugGodMode = false;
 let debugHideFloor = false;
 let debugShowCoords = false;
@@ -2276,9 +2276,13 @@ function toggleDebugMenu() {
   const panel = document.getElementById('debugMenu');
   if (!panel) return;
   if (panel.classList.contains('hidden')) {
+    paused = true;
+    document.exitPointerLock();
     openOverlay('debugMenu');
   } else {
+    paused = false;
     openOverlay(null);
+    if (gameStarted) renderer.domElement.requestPointerLock();
   }
 }
 
