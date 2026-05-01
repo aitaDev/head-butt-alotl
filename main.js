@@ -1630,12 +1630,14 @@ function makeCrystal() {
 
 function makeRelic() {
   const group = new THREE.Group();
-  const base = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.28, 0.7), new THREE.MeshStandardMaterial({ color: 0xb08a3c, roughness: 0.7, metalness: 0.35 }));
-  const lid = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.22, 0.72), new THREE.MeshStandardMaterial({ color: 0xd8b45a, roughness: 0.55, metalness: 0.4 }));
-  const gem = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), new THREE.MeshStandardMaterial({ color: 0x44ddff, emissive: 0x2299cc, emissiveIntensity: 0.8 }));
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.28, 0.7), new THREE.MeshStandardMaterial({ color: 0xc89a2b, emissive: 0x8a5c12, emissiveIntensity: 0.7, roughness: 0.45, metalness: 0.65 }));
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.22, 0.72), new THREE.MeshStandardMaterial({ color: 0xffd76a, emissive: 0xb88418, emissiveIntensity: 0.95, roughness: 0.3, metalness: 0.72 }));
+  const gem = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffee88, emissive: 0xffd84a, emissiveIntensity: 1.4 }));
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 10), new THREE.MeshBasicMaterial({ color: 0xffd84a, transparent: true, opacity: 0.16 }));
   lid.position.y = 0.24;
   gem.position.y = 0.42;
-  group.add(base, lid, gem);
+  halo.position.y = 0.42;
+  group.add(base, lid, gem, halo);
   const r = 14 + Math.random() * 78;
   const a = Math.random() * Math.PI * 2;
   group.position.set(Math.cos(a) * r, -70 + Math.random() * 42, Math.sin(a) * r);
