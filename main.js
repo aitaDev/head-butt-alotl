@@ -946,7 +946,7 @@ const crabs = [];
 // starfish removed
 const crystals = [];
 const relics = [];
-const peacefulRelicTarget = 5;
+const peacefulRelicTarget = 3;
 const tentacles = [];
 const depthZones = [];
 const pearls = [];
@@ -1646,9 +1646,9 @@ function makeRelic() {
   group.add(base, lid, gem, halo);
   const r = 14 + Math.random() * 78;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(Math.cos(a) * r, -70 + Math.random() * 42, Math.sin(a) * r);
+  group.position.set(Math.cos(a) * r, -83.5, Math.sin(a) * r);
   scene.add(group);
-  relics.push({ mesh: group, bob: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * 1.2 });
+  relics.push({ mesh: group, halo, bob: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * 1.2, pulse: Math.random() * Math.PI * 2 });
 }
 
 function makeKraken() {
@@ -2978,6 +2978,12 @@ function updateRelics(dt) {
     relic.bob += dt * 1.6;
     relic.mesh.rotation.y += dt * relic.spin;
     relic.mesh.position.y += Math.sin(relic.bob) * 0.01;
+    relic.pulse += dt * 2.4;
+    if (relic.halo) {
+      const pulse = 1 + Math.sin(relic.pulse) * 0.18;
+      relic.halo.scale.setScalar(pulse);
+      relic.halo.material.opacity = 0.12 + (Math.sin(relic.pulse) * 0.5 + 0.5) * 0.18;
+    }
     const dist = relic.mesh.position.distanceTo(player.pos);
     if (dist < 2.2) {
       scene.remove(relic.mesh);
