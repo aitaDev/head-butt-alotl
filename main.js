@@ -936,6 +936,7 @@ const audio = {
   gameMusic2: new Audio('./assets/audio/game-music-2.mp3'),
   gameMusic3: new Audio('./assets/audio/game-music-3.mp3'),
   gameMusic4: new Audio('./assets/audio/game-music-4.mp3'),
+  gameMusic5: new Audio('./assets/audio/game-music-5.mp3'),
   whoosh: new Audio('./assets/audio/whoosh.mp3'),
   whale: new Audio('./assets/audio/whale.mp3'),
   menu: new Audio('./assets/audio/menu.mp3'),
@@ -948,6 +949,7 @@ const audioBaseVolumes = {
   gameMusic2: 0.35,
   gameMusic3: 0.35,
   gameMusic4: 0.35,
+  gameMusic5: 0.35,
   whoosh: 0.35,
   whale: 0.55,
   menu: 0.45,
@@ -955,7 +957,7 @@ const audioBaseVolumes = {
   gameOver: 0.65,
   bigShark: 0.5
 };
-const gameMusicPlaylist = [audio.gameMusic2, audio.gameMusic3, audio.gameMusic4];
+const gameMusicPlaylist = [audio.gameMusic2, audio.gameMusic3, audio.gameMusic4, audio.gameMusic5];
 const bossBattlesPlaylist = [new Audio('./assets/audio/boss-battle-1.mp3')];
 let gameMusicQueue = [];
 let currentGameMusic = null;
@@ -1018,6 +1020,7 @@ function applyAudioSettings() {
   audio.gameMusic2.volume = audioBaseVolumes.gameMusic2 * musicScale;
   audio.gameMusic3.volume = audioBaseVolumes.gameMusic3 * musicScale;
   audio.gameMusic4.volume = audioBaseVolumes.gameMusic4 * musicScale;
+  audio.gameMusic5.volume = audioBaseVolumes.gameMusic5 * musicScale;
   audio.menu.volume = audioBaseVolumes.menu * musicScale;
   audio.whoosh.volume = audioBaseVolumes.whoosh * soundScale;
   audio.whale.volume = audioBaseVolumes.whale * soundScale;
