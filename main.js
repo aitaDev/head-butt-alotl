@@ -1845,7 +1845,6 @@ for (let i = 0; i < 40; i++) {
   kelpBlades.push(blade);
 }
 
-for (let i = 0; i < 6; i++) makeAlien();
 for (let i = 0; i < 18; i++) makePickup();
 for (let i = 0; i < 7; i++) makeJellyfish();
 for (let i = 0; i < 5; i++) makeSeahorse();
