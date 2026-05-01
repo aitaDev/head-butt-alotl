@@ -89,6 +89,22 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 #creditsMenu a {
   color: #9fdcff;
 }
+.relic-complete-panel {
+  background: radial-gradient(circle at top, rgba(255,235,160,0.22), rgba(8,18,34,0.98));
+  border: 1px solid rgba(255,220,130,0.5);
+  box-shadow: 0 0 60px rgba(255,215,120,0.25), 0 20px 80px rgba(0,0,0,0.55);
+}
+.relic-complete-icon {
+  font-size: 72px;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 18px rgba(255,220,120,0.55));
+}
+.relic-complete-note {
+  font-size: 11px;
+  line-height: 1.9;
+  background: rgba(255,220,120,0.08);
+  border-color: rgba(255,220,120,0.22);
+}
 #creditsMenu a:hover {
   color: #ffffff;
 }

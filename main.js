@@ -60,6 +60,7 @@ let pointerLocked = false;
 let rebinding = null;
 let lastDamageCause = 'your own bad decisions';
 let upgradeHintShown = false;
+let relicCompletionShown = false;
 let roundStartedAt = performance.now();
 
 const state = {
@@ -193,6 +194,18 @@ app.innerHTML = `
           <button id="skinDownBtn" class="skin-arrow">▶</button>
         </div>
         <div id="menuPreview"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="relicCompleteMenu" class="overlay hidden">
+    <div class="panel relic-complete-panel" style="max-width:640px;text-align:center">
+      <div class="relic-complete-icon">🗝️</div>
+      <h2>Relic Restored!</h2>
+      <p class="subtitle">You recovered the full relic set and brought a lost treasure of the pond back into the light.</p>
+      <div class="patch-note relic-complete-note">Ancient metal, sea-worn gold, and hidden memory all click back into place. This should feel huge, because it is.</div>
+      <div class="stack" style="margin-top:20px">
+        <button id="closeRelicCompleteBtn">Continue</button>
       </div>
     </div>
   </div>
@@ -342,6 +355,7 @@ function persist() {
 
 function resetState() {
   upgradeHintShown = false;
+  relicCompletionShown = false;
   roundStartedAt = performance.now();
   Object.assign(state, structuredClone(defaults.save));
   state.health = config.maxHealth();
@@ -2122,7 +2136,7 @@ function setGraphics(delta) {
 }
 
 function openOverlay(id) {
-  for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu', 'gameModeMenu', 'patchNotesMenu', 'creditsMenu', 'tutorialMenu', 'upgradeHintMenu', 'storyMenu', 'debugMenu']) el[key].classList.add('hidden');
+  for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu', 'relicCompleteMenu', 'gameModeMenu', 'patchNotesMenu', 'creditsMenu', 'tutorialMenu', 'upgradeHintMenu', 'storyMenu', 'debugMenu']) el[key].classList.add('hidden');
   if (id) el[id].classList.remove('hidden');
   if (renderer?.domElement) renderer.domElement.style.opacity = (id === 'mainMenu' || id === 'storyMenu' || id === 'tutorialMenu') ? '0' : '1';
   if (id === 'mainMenu') applySkin(currentSkinIndex);
@@ -2288,6 +2302,14 @@ document.addEventListener('keydown', e => {
     continueUpgradeHint();
     return;
   }
+  if (!el.relicCompleteMenu.classList.contains('hidden') && (e.code === 'Space' || e.key === ' ' || e.key === 'Enter')) {
+    e.preventDefault();
+    paused = false;
+    openOverlay(null);
+    ensureGameplayAudioPlaying();
+    renderer.domElement.requestPointerLock();
+    return;
+  }
   keys.add(e.code);
   if (e.code === data.options.keybinds.pause && gameStarted) {
     paused = !paused;
@@ -2339,6 +2361,7 @@ el.patchNotesBtn.onclick = () => { playMenuClick(); renderPatchNotes(); openOver
 el.creditsBtn.onclick = () => { playMenuClick(); openOverlay('creditsMenu'); };
 el.closePatchNotesBtn.onclick = () => { playMenuClick(); openOverlay('mainMenu'); };
 el.closeCreditsBtn.onclick = () => { playMenuClick(); openOverlay('mainMenu'); };
+el.closeRelicCompleteBtn.onclick = () => { playMenuClick(); paused = false; openOverlay(null); ensureGameplayAudioPlaying(); renderer.domElement.requestPointerLock(); };
 el.closeOptionsBtn.onclick = () => { playMenuClick(); openOverlay(gameStarted && paused && !isGameOver ? 'pauseMenu' : 'mainMenu'); };
 el.resumeBtn.onclick = () => { playMenuClick(); paused = false; openOverlay(null); ensureGameplayAudioPlaying(); renderer.domElement.requestPointerLock(); };
 el.charBtn.onclick = () => { if (isPeacefulMode()) return; playMenuClick(); renderUpgradeMenu(); openOverlay('upgradeMenu'); };
@@ -2953,8 +2976,11 @@ function updateRelics(dt) {
       state.currency += 10;
       addXp(20);
       showNotice(`🗝️ Relic recovered! ${state.stats.relicsFound}/${peacefulRelicTarget}`);
-      if (state.stats.relicsFound >= peacefulRelicTarget) {
-        showNotice('🏆 Treasure hunt complete! The relic set is restored.');
+      if (state.stats.relicsFound >= peacefulRelicTarget && !relicCompletionShown) {
+        relicCompletionShown = true;
+        paused = true;
+        document.exitPointerLock();
+        openOverlay('relicCompleteMenu');
       }
     }
   }
