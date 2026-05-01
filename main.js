@@ -48,7 +48,7 @@ const defaults = {
     health: 100,
     gameMode: 'survival',
     upgrades: { fins: 0, head: 0, lungs: 0, bite: 0 },
-    stats: { aliensBonked: 0, wormsEaten: 0, steakEaten: 0 }
+    stats: { aliensBonked: 0, wormsEaten: 0, steakEaten: 0, relicsFound: 0 }
   }
 };
 
@@ -289,6 +289,7 @@ app.innerHTML = `
 
   <div class="topbar">
     <div class="card" id="scoreCard">Silver: <span id="currency">0</span></div>
+    <div class="card hidden" id="relicCard">Relics: <span id="relicsFound">0</span>/<span id="relicsTotal">0</span></div>
   </div>
 
   <div id="notice"></div>
@@ -351,6 +352,15 @@ function clearHostileMobs() {
   for (const list of [aliens, sharks, anglerfish, leviathans, octopi, crabs, urchins]) {
     for (const item of list) scene.remove(item.mesh);
     list.length = 0;
+  }
+}
+
+function resetPeacefulRelics() {
+  for (const relic of relics) scene.remove(relic.mesh);
+  relics.length = 0;
+  state.stats.relicsFound = 0;
+  if (isPeacefulMode()) {
+    for (let i = 0; i < peacefulRelicTarget; i++) makeRelic();
   }
 }
 
@@ -915,6 +925,8 @@ const urchins = [];
 const crabs = [];
 // starfish removed
 const crystals = [];
+const relics = [];
+const peacefulRelicTarget = 5;
 const tentacles = [];
 const depthZones = [];
 const pearls = [];
@@ -1602,6 +1614,21 @@ function makeCrystal() {
   crystals.push({ mesh: group, color, bob: Math.random() * Math.PI * 2, phase: Math.random() * Math.PI * 2 });
 }
 
+function makeRelic() {
+  const group = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.28, 0.7), new THREE.MeshStandardMaterial({ color: 0xb08a3c, roughness: 0.7, metalness: 0.35 }));
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.22, 0.72), new THREE.MeshStandardMaterial({ color: 0xd8b45a, roughness: 0.55, metalness: 0.4 }));
+  const gem = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), new THREE.MeshStandardMaterial({ color: 0x44ddff, emissive: 0x2299cc, emissiveIntensity: 0.8 }));
+  lid.position.y = 0.24;
+  gem.position.y = 0.42;
+  group.add(base, lid, gem);
+  const r = 14 + Math.random() * 78;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(Math.cos(a) * r, -70 + Math.random() * 42, Math.sin(a) * r);
+  scene.add(group);
+  relics.push({ mesh: group, bob: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * 1.2 });
+}
+
 function makeKraken() {
   const baseAngle = Math.random() * Math.PI * 2;
   const mesh = new THREE.Group();
@@ -1978,6 +2005,9 @@ function updateHUD() {
   el.healthFill.classList.toggle('sprint-flash', !!player.sprinting);
   el.healthLabel.textContent = `Health ${Math.round(state.health)}/${config.maxHealth()}`;
   el.currency.textContent = state.currency;
+  el.relicCard.classList.toggle('hidden', !isPeacefulMode());
+  el.relicsFound.textContent = state.stats.relicsFound;
+  el.relicsTotal.textContent = peacefulRelicTarget;
   if (!upgradeHintShown && state.currency >= 20) {
     showUpgradeHintPopup();
     return;
@@ -2099,6 +2129,7 @@ function openOverlay(id) {
 function startGame(continueGame = false) {
   if (!continueGame) resetState();
   else Object.assign(state, structuredClone(data.save));
+  if (isPeacefulMode() && relics.length === 0 && state.stats.relicsFound < peacefulRelicTarget) resetPeacefulRelics();
   state.health = Math.min(config.maxHealth(), state.health || config.maxHealth());
   player.pos.set(0, -18, 0);
   player.verticalVelocity = 0;
@@ -2125,6 +2156,7 @@ function prepareNewGame(mode = 'survival') {
   resetState();
   state.gameMode = mode;
   if (isPeacefulMode()) clearHostileMobs();
+  resetPeacefulRelics();
   state.health = Math.min(config.maxHealth(), state.health || config.maxHealth());
   player.pos.set(0, -35, 0);
   player.verticalVelocity = 0;
@@ -2892,6 +2924,28 @@ function updateCreatureInteractions(now) {
   }
 }
 
+function updateRelics(dt) {
+  if (!isPeacefulMode()) return;
+  for (let i = relics.length - 1; i >= 0; i--) {
+    const relic = relics[i];
+    relic.bob += dt * 1.6;
+    relic.mesh.rotation.y += dt * relic.spin;
+    relic.mesh.position.y += Math.sin(relic.bob) * 0.01;
+    const dist = relic.mesh.position.distanceTo(player.pos);
+    if (dist < 2.2) {
+      scene.remove(relic.mesh);
+      relics.splice(i, 1);
+      state.stats.relicsFound += 1;
+      state.currency += 10;
+      addXp(20);
+      showNotice(`🗝️ Relic recovered! ${state.stats.relicsFound}/${peacefulRelicTarget}`);
+      if (state.stats.relicsFound >= peacefulRelicTarget) {
+        showNotice('🏆 Treasure hunt complete! The relic set is restored.');
+      }
+    }
+  }
+}
+
 function animate(now) {
   requestAnimationFrame(animate);
   const dt = Math.min(0.033, (now - lastTime) / 1000);
@@ -2927,6 +2981,7 @@ function animate(now) {
     updateFloatingTexts(dt);
     updateRipples(dt);
     updateCreatureInteractions(now);
+    updateRelics(dt);
     updateSeabedCreatures(dt, now);
     persist();
     updateHUD();
