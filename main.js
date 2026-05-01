@@ -946,10 +946,10 @@ const audio = {
 };
 const audioBaseVolumes = {
   underwater: 0.35,
-  gameMusic2: 0.35,
-  gameMusic3: 0.35,
-  gameMusic4: 0.35,
-  gameMusic5: 0.35,
+  gameMusic2: 0.14,
+  gameMusic3: 0.14,
+  gameMusic4: 0.14,
+  gameMusic5: 0.14,
   whoosh: 0.35,
   whale: 0.55,
   menu: 0.45,
