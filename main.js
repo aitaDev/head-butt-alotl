@@ -945,7 +945,7 @@ const audio = {
   bigShark: new Audio('./assets/audio/big-shark.mp3')
 };
 const audioBaseVolumes = {
-  underwater: 0.275,
+  underwater: 0.35,
   gameMusic2: 0.35,
   gameMusic3: 0.35,
   gameMusic4: 0.35,
