@@ -2363,7 +2363,7 @@ function updatePlayer(dt) {
     (keys.has(data.options.keybinds.forward) ? 1 : 0) - (keys.has(data.options.keybinds.backward) ? 1 : 0)
   );
   const jumpPressed = keys.has(data.options.keybinds.jump);
-  const sprintPressed = keys.has(data.options.keybinds.sprint);
+  const sprintPressed = !isPeacefulMode() && keys.has(data.options.keybinds.sprint);
 
   const flatForward = new THREE.Vector3(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
   const right = new THREE.Vector3(-flatForward.z, 0, flatForward.x);
