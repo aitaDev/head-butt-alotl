@@ -1041,7 +1041,7 @@ function unlockAudio() {
   }
 }
 
-function makeAlien() {
+function makeAlien(overridePos = null) {
   const group = new THREE.Group();
   const types = [
     { name: 'grunt', body: 0x88d66f, head: 0x8cf07d, belly: 0xb8f29a, horn: true, arms: true, scaleMin: 0.6, scaleMax: 1.4, hp: 1, speed: 1.1, damage: 1 },
@@ -1838,6 +1838,7 @@ for (let i = 0; i < 40; i++) {
   kelpBlades.push(blade);
 }
 
+for (let i = 0; i < 6; i++) makeAlien();
 for (let i = 0; i < 18; i++) makePickup();
 for (let i = 0; i < 7; i++) makeJellyfish();
 for (let i = 0; i < 5; i++) makeSeahorse();
