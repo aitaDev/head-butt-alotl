@@ -81,6 +81,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   color: #ffd27d;
   text-shadow: 2px 2px 0 #000;
 }
+#creditsTag {
+  margin-top: 10px;
+  font-size: 10px;
+  color: #d7f1ff;
+  text-shadow: 1px 1px 0 #000;
+  line-height: 1.5;
+}
 #menuPreview {
   position: relative;
   z-index: 1;

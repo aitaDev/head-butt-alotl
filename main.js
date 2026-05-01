@@ -175,6 +175,7 @@ app.innerHTML = `
           <button id="patchNotesBtn" class="secondary">Patch Notes</button>
         </div>
         <div id="versionTag">${gameVersion} by Phishie</div>
+        <div id="creditsTag">Developed by Phishie (Dan A)</div>
       </div>
       <div class="main-menu-art" aria-hidden="true">
         <div class="skin-chooser skin-chooser-overlay">
