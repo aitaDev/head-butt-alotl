@@ -945,7 +945,7 @@ const audioBaseVolumes = {
   underwater: 0.35,
   gameMusic2: 0.35,
   gameMusic3: 0.35,
-  scuba: 0.5,
+  scuba: 0.25,
   whoosh: 0.35,
   whale: 0.55,
   menu: 0.45,
