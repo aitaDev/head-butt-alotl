@@ -1704,6 +1704,7 @@ function updateAnglerfish(dt, now) {
     if (dist > 0.001) {
       af.mesh.position.addScaledVector(toPlayer.normalize(), chaseSpeed * hostileSpeedMultiplier * dt);
       af.mesh.lookAt(player.pos);
+      af.mesh.rotateY(Math.PI / 2);
     }
 
     // Contact damage
