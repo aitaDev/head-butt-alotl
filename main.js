@@ -2129,6 +2129,8 @@ function openOverlay(id) {
 function startGame(continueGame = false) {
   if (!continueGame) resetState();
   else Object.assign(state, structuredClone(data.save));
+  if (isPeacefulMode()) initPeacefulMode();
+  else initSurvivalMode();
   if (isPeacefulMode() && relics.length === 0 && state.stats.relicsFound < peacefulRelicTarget) resetPeacefulRelics();
   state.health = Math.min(config.maxHealth(), state.health || config.maxHealth());
   player.pos.set(0, -18, 0);
@@ -2155,7 +2157,12 @@ function startGame(continueGame = false) {
 function prepareNewGame(mode = 'survival') {
   resetState();
   state.gameMode = mode;
-  if (isPeacefulMode()) clearHostileMobs();
+  if (isPeacefulMode()) {
+    initPeacefulMode();
+    clearHostileMobs();
+  } else {
+    initSurvivalMode();
+  }
   resetPeacefulRelics();
   state.health = Math.min(config.maxHealth(), state.health || config.maxHealth());
   player.pos.set(0, -35, 0);
@@ -2946,6 +2953,48 @@ function updateRelics(dt) {
   }
 }
 
+function initSurvivalMode() {
+  // Survival-only setup hook for future mode separation.
+}
+
+function initPeacefulMode() {
+  // Peaceful-only setup hook for future mode separation.
+}
+
+function updateSharedGameplay(dt, now) {
+  updatePlayer(dt);
+  updateNarwhals(dt);
+  updateTunas(dt, now);
+  updatePickups(dt);
+  for (const octo of octopi) {
+    octo.bob += dt * 1.5;
+    octo.mesh.position.y = -82 + Math.sin(octo.bob) * 0.5;
+  }
+  updateJellyfish(dt);
+  updateSeahorses(dt);
+  updateGlowOrbs(dt, now);
+  updateAnemones(dt);
+  // updateLoreTablets(dt);
+  updateBubbles(dt);
+  updateKelp(dt);
+  updateFloatingTexts(dt);
+  updateRipples(dt);
+}
+
+function updateSurvivalMode(dt, now) {
+  updateAliens(dt, now);
+  updateLeviathans(dt, now);
+  updateAnglerfish(dt, now);
+  updateSharks(dt, now);
+  updateOctopi(dt, now);
+  updateCreatureInteractions(now);
+  updateSeabedCreatures(dt, now);
+}
+
+function updatePeacefulMode(dt, now) {
+  updateRelics(dt);
+}
+
 function animate(now) {
   requestAnimationFrame(animate);
   const dt = Math.min(0.033, (now - lastTime) / 1000);
@@ -2958,31 +3007,9 @@ function animate(now) {
   whale.position.y = -65 + Math.sin(whaleSwimAngle * 1.7) * 6;
   whale.lookAt(180 + Math.cos(whaleSwimAngle + 0.2) * 90, whale.position.y, -100 + Math.sin(whaleSwimAngle + 0.2) * 70);
   if (!paused && gameStarted) {
-    updatePlayer(dt);
-    updateAliens(dt, now);
-    updateNarwhals(dt);
-    updateLeviathans(dt, now);
-    updateAnglerfish(dt, now);
-    updateSharks(dt, now);
-    updateTunas(dt, now);
-    updateOctopi(dt, now);
-    updatePickups(dt);
-    for (const octo of octopi) {
-      octo.bob += dt * 1.5;
-      octo.mesh.position.y = -82 + Math.sin(octo.bob) * 0.5;
-    }
-    updateJellyfish(dt);
-    updateSeahorses(dt);
-    updateGlowOrbs(dt, now);
-    updateAnemones(dt);
-    // updateLoreTablets(dt);
-    updateBubbles(dt);
-    updateKelp(dt);
-    updateFloatingTexts(dt);
-    updateRipples(dt);
-    updateCreatureInteractions(now);
-    updateRelics(dt);
-    updateSeabedCreatures(dt, now);
+    updateSharedGameplay(dt, now);
+    if (isPeacefulMode()) updatePeacefulMode(dt, now);
+    else updateSurvivalMode(dt, now);
     persist();
     updateHUD();
     if (debugShowCoords && el.debugCoords) {
