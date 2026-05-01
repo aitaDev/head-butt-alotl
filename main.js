@@ -931,6 +931,8 @@ let audioUnlocked = false;
 
 const audio = {
   underwater: new Audio('./assets/audio/underwater-loop.mp3'),
+  gameMusic2: new Audio('./assets/audio/game-music-2.mp3'),
+  gameMusic3: new Audio('./assets/audio/game-music-3.mp3'),
   scuba: new Audio('./assets/audio/scuba.mp3'),
   whoosh: new Audio('./assets/audio/whoosh.mp3'),
   whale: new Audio('./assets/audio/whale.mp3'),
@@ -941,6 +943,8 @@ const audio = {
 };
 const audioBaseVolumes = {
   underwater: 0.35,
+  gameMusic2: 0.35,
+  gameMusic3: 0.35,
   scuba: 0.5,
   whoosh: 0.35,
   whale: 0.55,
@@ -949,14 +953,50 @@ const audioBaseVolumes = {
   gameOver: 0.65,
   bigShark: 0.5
 };
-audio.underwater.loop = true;
+const gameMusicPlaylist = [audio.underwater, audio.gameMusic2, audio.gameMusic3];
+let gameMusicQueue = [];
+let currentGameMusic = null;
+
 audio.whoosh.loop = true;
 audio.bigShark.loop = true;
+
+function reshuffleGameMusic() {
+  gameMusicQueue = [...gameMusicPlaylist].sort(() => Math.random() - 0.5);
+}
+
+function playNextGameMusic() {
+  if (!audioUnlocked || !gameStarted || paused || isGameOver) return;
+  if (!gameMusicQueue.length) reshuffleGameMusic();
+  if (currentGameMusic) {
+    currentGameMusic.pause();
+    currentGameMusic.currentTime = 0;
+  }
+  currentGameMusic = gameMusicQueue.shift();
+  currentGameMusic.currentTime = 0;
+  currentGameMusic.play().catch(() => {});
+}
+
+function stopGameMusic() {
+  for (const track of gameMusicPlaylist) {
+    track.pause();
+    track.currentTime = 0;
+  }
+  currentGameMusic = null;
+}
+
+for (const track of gameMusicPlaylist) {
+  track.loop = false;
+  track.addEventListener('ended', () => {
+    if (track === currentGameMusic) playNextGameMusic();
+  });
+}
 
 function applyAudioSettings() {
   const soundScale = data.options.sound / 100;
   const musicScale = data.options.music / 100;
   audio.underwater.volume = audioBaseVolumes.underwater * musicScale;
+  audio.gameMusic2.volume = audioBaseVolumes.gameMusic2 * musicScale;
+  audio.gameMusic3.volume = audioBaseVolumes.gameMusic3 * musicScale;
   audio.menu.volume = audioBaseVolumes.menu * musicScale;
   audio.scuba.volume = audioBaseVolumes.scuba * soundScale;
   audio.whoosh.volume = audioBaseVolumes.whoosh * soundScale;
@@ -1997,7 +2037,8 @@ function startGame(continueGame = false) {
   gameStarted = true;
   openOverlay(null);
   unlockAudio();
-  if (audioUnlocked) audio.underwater.play().catch(() => {});
+  audio.menu.pause();
+  if (audioUnlocked) playNextGameMusic();
   renderer.domElement.requestPointerLock();
   persist();
   refreshAxolotlVisuals();
@@ -2066,6 +2107,7 @@ function advanceStory() {
 
 function quitToTitle() {
   paused = true;
+  stopGameMusic();
   for (const sound of Object.values(audio)) {
     sound.pause();
     sound.currentTime = 0;
