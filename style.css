@@ -127,7 +127,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   0% { opacity: 1; }
   100% { opacity: 0.35; }
 }
-input[type="range"] { width: 180px; }
+input[type="range"] { width: 100%; display: block; }
 .small { font-size: 13px; color: #9fb4d0; }
 #gameOverMenu {
   background: radial-gradient(circle at top, rgba(80,80,120,0.4), rgba(0,0,0,0.92));

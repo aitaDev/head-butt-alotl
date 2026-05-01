@@ -912,17 +912,33 @@ const audio = {
   gameOver: new Audio('./assets/audio/game_over.mp3'),
   bigShark: new Audio('./assets/audio/big-shark.mp3')
 };
+const audioBaseVolumes = {
+  underwater: 0.35,
+  scuba: 0.5,
+  whoosh: 0.35,
+  whale: 0.55,
+  menu: 0.45,
+  eat: 0.5,
+  gameOver: 0.65,
+  bigShark: 0.5
+};
 audio.underwater.loop = true;
-audio.underwater.volume = 0.35;
-audio.scuba.volume = 0.5;
 audio.whoosh.loop = true;
-audio.whoosh.volume = 0.35;
-audio.whale.volume = 0.55;
-audio.menu.volume = 0.45;
-audio.eat.volume = 0.5;
-audio.gameOver.volume = 0.65;
 audio.bigShark.loop = true;
-audio.bigShark.volume = 0.5;
+
+function applyAudioSettings() {
+  const soundScale = data.options.sound / 100;
+  const musicScale = data.options.music / 100;
+  audio.underwater.volume = audioBaseVolumes.underwater * musicScale;
+  audio.menu.volume = audioBaseVolumes.menu * musicScale;
+  audio.scuba.volume = audioBaseVolumes.scuba * soundScale;
+  audio.whoosh.volume = audioBaseVolumes.whoosh * soundScale;
+  audio.whale.volume = audioBaseVolumes.whale * soundScale;
+  audio.eat.volume = audioBaseVolumes.eat * soundScale;
+  audio.gameOver.volume = audioBaseVolumes.gameOver * soundScale;
+  audio.bigShark.volume = audioBaseVolumes.bigShark * soundScale;
+}
+applyAudioSettings();
 
 function unlockAudio() {
   if (audioUnlocked) return;
@@ -2108,8 +2124,8 @@ el.retryBtn.onclick = () => { unlockAudio(); startGame(false); };
 el.gameOverTitleBtn.onclick = quitToTitle;
 el.graphicsDown.onclick = () => setGraphics(-1);
 el.graphicsUp.onclick = () => setGraphics(1);
-el.soundSlider.oninput = e => { data.options.sound = Number(e.target.value); persist(); renderOptions(); };
-el.musicSlider.oninput = e => { data.options.music = Number(e.target.value); persist(); renderOptions(); };
+el.soundSlider.oninput = e => { data.options.sound = Number(e.target.value); applyAudioSettings(); persist(); renderOptions(); };
+el.musicSlider.oninput = e => { data.options.music = Number(e.target.value); applyAudioSettings(); persist(); renderOptions(); };
 
 window.addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
