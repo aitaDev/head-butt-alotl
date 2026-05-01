@@ -172,8 +172,10 @@ app.innerHTML = `
           <button id="newGameBtn">New Game</button>
           <button id="continueBtn">Continue</button>
           <button id="optionsBtn" class="secondary">Options</button>
-          <button id="patchNotesBtn" class="secondary">Patch Notes</button>
-          <button id="creditsBtn" class="secondary">Credits</button>
+          <div class="menu-button-row">
+            <button id="patchNotesBtn" class="secondary">Patch Notes</button>
+            <button id="creditsBtn" class="secondary">Credits</button>
+          </div>
         </div>
         <div id="versionTag">${gameVersion} by Phishie</div>
       </div>
