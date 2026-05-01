@@ -956,6 +956,7 @@ const audioBaseVolumes = {
 const gameMusicPlaylist = [audio.gameMusic2, audio.gameMusic3];
 let gameMusicQueue = [];
 let currentGameMusic = null;
+let gameMusicSilenceTimer = null;
 
 audio.underwater.loop = true;
 audio.whoosh.loop = true;
@@ -967,6 +968,7 @@ function reshuffleGameMusic() {
 
 function playNextGameMusic() {
   if (!audioUnlocked || !gameStarted || paused || isGameOver) return;
+  clearTimeout(gameMusicSilenceTimer);
   if (!gameMusicQueue.length) reshuffleGameMusic();
   if (currentGameMusic) {
     currentGameMusic.pause();
@@ -984,6 +986,7 @@ function ensureGameMusicPlaying() {
 }
 
 function stopGameMusic() {
+  clearTimeout(gameMusicSilenceTimer);
   for (const track of gameMusicPlaylist) {
     track.pause();
     track.currentTime = 0;
@@ -994,7 +997,10 @@ function stopGameMusic() {
 for (const track of gameMusicPlaylist) {
   track.loop = false;
   track.addEventListener('ended', () => {
-    if (track === currentGameMusic) playNextGameMusic();
+    if (track !== currentGameMusic) return;
+    gameMusicSilenceTimer = setTimeout(() => {
+      if (!paused && gameStarted && !isGameOver) playNextGameMusic();
+    }, 30000);
   });
 }
 
