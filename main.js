@@ -984,7 +984,7 @@ function playNextGameMusic() {
   currentGameMusic.play().catch(() => {});
 }
 
-function ensureGameMusicPlaying() {
+function ensureGameplayAudioPlaying() {
   if (!audioUnlocked || !gameStarted || paused || isGameOver) return;
   if (audio.underwater.paused) audio.underwater.play().catch(() => {});
   if (!currentGameMusic || currentGameMusic.paused) playNextGameMusic();
@@ -2100,7 +2100,7 @@ function continueTutorial() {
   unlockAudio();
   paused = false;
   openOverlay(null);
-  ensureGameMusicPlaying();
+  ensureGameplayAudioPlaying();
   renderer.domElement.requestPointerLock();
 }
 
@@ -2108,7 +2108,7 @@ function continueUpgradeHint() {
   unlockAudio();
   paused = false;
   openOverlay(null);
-  ensureGameMusicPlaying();
+  ensureGameplayAudioPlaying();
   renderer.domElement.requestPointerLock();
 }
 
@@ -2244,7 +2244,7 @@ el.creditsBtn.onclick = () => { unlockAudio(); openOverlay('creditsMenu'); };
 el.closePatchNotesBtn.onclick = () => { unlockAudio(); openOverlay('mainMenu'); };
 el.closeCreditsBtn.onclick = () => { unlockAudio(); openOverlay('mainMenu'); };
 el.closeOptionsBtn.onclick = () => { unlockAudio(); openOverlay(gameStarted && paused && !isGameOver ? 'pauseMenu' : 'mainMenu'); };
-el.resumeBtn.onclick = () => { unlockAudio(); paused = false; openOverlay(null); ensureGameMusicPlaying(); renderer.domElement.requestPointerLock(); };
+el.resumeBtn.onclick = () => { unlockAudio(); paused = false; openOverlay(null); ensureGameplayAudioPlaying(); renderer.domElement.requestPointerLock(); };
 el.charBtn.onclick = () => { renderUpgradeMenu(); openOverlay('upgradeMenu'); };
 el.closeUpgradeBtn.onclick = () => openOverlay('pauseMenu');
 el.quitBtn.onclick = quitToTitle;
@@ -2329,7 +2329,7 @@ function updatePlayer(dt) {
     player.verticalVelocity = Math.min(0, player.verticalVelocity);
   }
   if (audioUnlocked) {
-    if (!paused && audio.underwater.paused) audio.underwater.play().catch(() => {});
+    if (!paused) ensureGameplayAudioPlaying();
     if (sprintPressed && desiredVelocity.lengthSq() > 0) {
       if (audio.whoosh.paused) audio.whoosh.play().catch(() => {});
     } else {
