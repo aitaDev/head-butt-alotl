@@ -1636,16 +1636,18 @@ function makeCrystal() {
 
 function isRelicSpawnClear(pos) {
   const blockers = [
-    ...coral,
-    ...reeds,
-    ...anemones.map(a => a.mesh),
-    ...urchins.map(u => u.mesh),
-    ...crystals.map(c => c.mesh)
+    ...coral.map(mesh => ({ mesh, radius: 6 + (mesh.scale?.x || 1) * 3.5 })),
+    ...reeds.map(mesh => ({ mesh, radius: 2.4 })),
+    ...anemones.map(a => ({ mesh: a.mesh, radius: 4.5 })),
+    ...urchins.map(u => ({ mesh: u.mesh, radius: 3.5 })),
+    ...crystals.map(c => ({ mesh: c.mesh, radius: 5.5 })),
+    ...kelp.map(k => ({ mesh: k.mesh, radius: 4.5 })),
+    ...ships.map(s => ({ mesh: s.mesh, radius: 12 }))
   ];
   for (const blocker of blockers) {
-    if (blocker.position.distanceTo(pos) < 7) return false;
+    if (blocker.mesh.position.distanceTo(pos) < blocker.radius) return false;
   }
-  return pos.length() > 12;
+  return pos.length() > 18;
 }
 
 function makeRelic() {
