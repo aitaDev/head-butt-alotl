@@ -1646,7 +1646,7 @@ function makeRelic() {
   group.add(base, lid, gem, halo);
   const r = 14 + Math.random() * 78;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(Math.cos(a) * r, -83.5, Math.sin(a) * r);
+  group.position.set(Math.cos(a) * r, -80.5, Math.sin(a) * r);
   scene.add(group);
   relics.push({ mesh: group, halo, bob: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * 1.2, pulse: Math.random() * Math.PI * 2 });
 }
