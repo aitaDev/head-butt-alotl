@@ -758,9 +758,21 @@ scene.add(whale);
 let whaleSwimAngle = 0;
 
 const stars = new THREE.Group();
+const maxSwimY = -2.5;
+const minSwimY = -82;
+
+function clampSpawnY(y) {
+  return Math.min(y, maxSwimY);
+}
+
+function randomSpawnY(minY, maxY) {
+  const cappedMaxY = Math.min(maxY, maxSwimY);
+  return minY + Math.random() * Math.max(0, cappedMaxY - minY);
+}
+
 for (let i = 0; i < 120; i++) {
   const p = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0xb8ffb0 }));
-  p.position.set((Math.random() - 0.5) * 140, 20 + Math.random() * 45, (Math.random() - 0.5) * 140);
+  p.position.set((Math.random() - 0.5) * 140, randomSpawnY(-20, 20), (Math.random() - 0.5) * 140);
   stars.add(p);
 }
 scene.add(stars);
@@ -968,7 +980,7 @@ for (let i = 0; i < 18; i++) {
     new THREE.MeshBasicMaterial({ color: 0xd4f0ff, transparent: true, opacity: 0.07 + Math.random() * 0.06, side: THREE.DoubleSide })
   );
   const angle = (i / 18) * Math.PI * 2;
-  ray.position.set(Math.cos(angle) * (8 + Math.random() * 28), -6 + Math.random() * 6, Math.sin(angle) * (8 + Math.random() * 28));
+  ray.position.set(Math.cos(angle) * (8 + Math.random() * 28), randomSpawnY(-6, 0), Math.sin(angle) * (8 + Math.random() * 28));
   ray.rotation.z = (Math.random() - 0.5) * 0.4;
   ray.rotation.x = (Math.random() - 0.5) * 0.25;
   lightRays.add(ray);
@@ -1155,7 +1167,7 @@ function makeAlien(overridePos = null) {
   group.scale.setScalar(scale);
   const r = 20 + Math.random() * 42;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -72 + Math.random() * 62, overridePos ? overridePos.z : Math.sin(a) * r);
+  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? clampSpawnY(overridePos.y) : randomSpawnY(-72, -10), overridePos ? overridePos.z : Math.sin(a) * r);
   scene.add(group);
   const sizeDamageMultiplier = scale >= 2 ? 4.5 : scale >= 1.5 ? 2.5 : 1;
   aliens.push({ mesh: group, hp: (38 + state.level * 9) * scale * 1.8 * type.hp * 2, speed: Math.max(0.35, type.speed - scale * 0.12) + Math.random() * 0.35, bob: Math.random() * Math.PI * 2, scale, damage: 6 * scale * type.damage * sizeDamageMultiplier, kind: type.name, collisionRadius: 1.2 * scale });
@@ -1229,7 +1241,7 @@ function makePickup(kind = Math.random() < 0.12 ? 'steak' : Math.random() < 0.45
   const maxR = kind === 'fish' ? 110 : 48;
   const r = minR + Math.random() * (maxR - minR);
   const a = Math.random() * Math.PI * 2;
-  group.position.set(Math.cos(a) * r, kind === 'worm' ? -35 - Math.random() * 52 : -76 + Math.random() * 68, Math.sin(a) * r);
+  group.position.set(Math.cos(a) * r, kind === 'worm' ? randomSpawnY(-87, -35) : randomSpawnY(-76, -8), Math.sin(a) * r);
   group.rotation.set(Math.random(), Math.random(), Math.random());
   scene.add(group);
   const collisionRadius = kind === 'steak' ? 1.1 : kind === 'fish' ? 0.95 : 0.7;
@@ -1267,7 +1279,7 @@ function spawnDamageText(position, amount, crit = false) {
   requestAnimationFrame(() => elText.classList.add('show'));
 }
 
-function makeNarwhal(index = narwhals.length) {
+function makeNarwhal(index = narwhals.length, overridePos = null) {
   const group = new THREE.Group();
   const body = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.5, 1.5), new THREE.MeshStandardMaterial({ color: 0xd7f1ff, roughness: 0.7 }));
   const head = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 1.05), new THREE.MeshStandardMaterial({ color: 0xeaf8ff, roughness: 0.6 }));
@@ -1297,7 +1309,7 @@ function makeNarwhal(index = narwhals.length) {
   eyeR.position.set(3.65, 0.22, -0.34);
   group.add(body, head, horn, tailBase, tailFlukeTop, tailFlukeBottom, finL, finR, dorsal, eyeL, eyeR);
   const angle = (Math.PI * 2 * index) / 3;
-  group.position.set(Math.cos(angle) * 28, overridePos ? overridePos.y : -42 + Math.sin(index) * 4, Math.sin(angle) * 28);
+  group.position.set(Math.cos(angle) * 28, overridePos ? clampSpawnY(overridePos.y) : randomSpawnY(-46, -38), Math.sin(angle) * 28);
   scene.add(group);
   narwhals.push({ mesh: group, bob: Math.random() * Math.PI * 2, collisionRadius: 4.5, angle, orbitRadius: 28 + index * 2, orbitSpeed: 2.8 + index * 0.18, depthOffset: -42 + index * 1.2 });
 }
@@ -1315,7 +1327,7 @@ function makeLeviathan(overridePos) {
   group.add(body, fin, tail, jaw);
   const r = 70 + Math.random() * 40;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -45 + Math.random() * 18, overridePos ? overridePos.z : Math.sin(a) * r);
+  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? clampSpawnY(overridePos.y) : randomSpawnY(-45, -27), overridePos ? overridePos.z : Math.sin(a) * r);
   scene.add(group);
   leviathans.push({ mesh: group, speed: 8 + Math.random() * 3, damage: 100, hp: 1800, bob: Math.random() * Math.PI * 2 });
 }
@@ -1344,7 +1356,9 @@ function makeShark(overridePos) {
   gillL.position.set(1.1, -0.05, 0.68);
   gillR.position.set(1.1, -0.05, -0.68);
   group.add(body, back, belly, fin, tail, jaw, eyeL, eyeR, gillL, gillR);
-  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -60 + Math.random() * 40, overridePos ? overridePos.z : Math.sin(a) * r);
+  const r = 20 + Math.random() * 72;
+  const a = Math.random() * Math.PI * 2;
+  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? clampSpawnY(overridePos.y) : randomSpawnY(-60, -20), overridePos ? overridePos.z : Math.sin(a) * r);
   scene.add(group);
   sharks.push({ mesh: group, speed: 2 + Math.random() * 1.5, damage: 18 + Math.random() * 12, bob: Math.random() * Math.PI * 2, hp: (85 + Math.random() * 45) * 2, hitCooldown: 0, collisionRadius: 3.2 });
 }
@@ -1410,7 +1424,7 @@ function makeTuna(overridePos) {
   const r = 15 + Math.random() * 80;
   const a = Math.random() * Math.PI * 2;
   group.rotation.y = Math.PI / 2;
-  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -50 + Math.random() * 40, overridePos ? overridePos.z : Math.sin(a) * r);
+  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? clampSpawnY(overridePos.y) : randomSpawnY(-50, -10), overridePos ? overridePos.z : Math.sin(a) * r);
   scene.add(group);
   tunas.push({ mesh: group, speed: 1.8 + Math.random() * 0.8, hp: 3000, bob: Math.random() * Math.PI * 2, hitCooldown: 0, collisionRadius: 18, friendly: true, wanderAngle: Math.random() * Math.PI * 2 });
 }
@@ -1442,7 +1456,7 @@ function makeOctopus(overridePos) {
   group.add(eyeWhiteL, eyeWhiteR, eyePupilL, eyePupilR);
   const r = 12 + Math.random() * 80;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -45 + Math.random() * 30, overridePos ? overridePos.z : Math.sin(a) * r);
+  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? clampSpawnY(overridePos.y) : randomSpawnY(-45, -15), overridePos ? overridePos.z : Math.sin(a) * r);
   scene.add(group);
   octopi.push({ mesh: group, speed: 1.2 + Math.random() * 0.7, hp: 220 + Math.random() * 80, bob: Math.random() * Math.PI * 2, hitCooldown: 0, collisionRadius: 3.5 });
 }
@@ -1465,7 +1479,7 @@ function makeJellyfish(overridePos) {
   group.add(bell);
   const r = 15 + Math.random() * 75;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -38 + Math.random() * 32, overridePos ? overridePos.z : Math.sin(a) * r);
+  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? clampSpawnY(overridePos.y) : randomSpawnY(-38, -6), overridePos ? overridePos.z : Math.sin(a) * r);
   scene.add(group);
   jellyfish.push({ mesh: group, bob: Math.random() * Math.PI * 2, phase: Math.random() * Math.PI * 2, color });
 }
@@ -1485,7 +1499,7 @@ function makeSeahorse() {
   group.add(body, head, snout, curl);
   const r = 8 + Math.random() * 65;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(Math.cos(a) * r, -60 + Math.random() * 55, Math.sin(a) * r);
+  group.position.set(Math.cos(a) * r, randomSpawnY(-60, -5), Math.sin(a) * r);
   scene.add(group);
   seahorses.push({ mesh: group, bob: Math.random() * Math.PI * 2, speed: 0.3 + Math.random() * 0.5, wanderAngle: Math.random() * Math.PI * 2 });
 }
@@ -1501,7 +1515,7 @@ function makeGlowOrb() {
   group.add(orb, halo);
   const r = 10 + Math.random() * 85;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(Math.cos(a) * r, -72 + Math.random() * 58, Math.sin(a) * r);
+  group.position.set(Math.cos(a) * r, randomSpawnY(-72, -14), Math.sin(a) * r);
   scene.add(group);
   glowOrbs.push({ mesh: group, bob: Math.random() * Math.PI * 2, phase: Math.random() * Math.PI * 2, color });
 }
@@ -1555,7 +1569,7 @@ function makeUrchin(overridePos) {
     new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.9 }));
   group.add(body);
   const r = 10 + Math.random() * 88; const a = Math.random() * Math.PI * 2;
-  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -83.5, overridePos ? overridePos.z : Math.sin(a) * r);
+  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? clampSpawnY(overridePos.y) : -83.5, overridePos ? overridePos.z : Math.sin(a) * r);
   group.scale.setScalar(2 + Math.random() * 4);
   scene.add(group);
   urchins.push({ mesh: group, hp: (18 + Math.random() * 12) * 2, bob: Math.random() * Math.PI * 2, hitCooldown: 0 });
@@ -1588,7 +1602,7 @@ function makeCrab(overridePos) {
   eyeL.position.set(0.18, 0.28, 0.14); eyeR.position.set(0.18, 0.28, -0.14);
   group.add(eyeL, eyeR);
   const r = 8 + Math.random() * 90; const a2 = Math.random() * Math.PI * 2;
-  group.position.set(overridePos ? overridePos.x : Math.cos(a2) * r, overridePos ? overridePos.y : -82.5, overridePos ? overridePos.z : Math.sin(a2) * r);
+  group.position.set(overridePos ? overridePos.x : Math.cos(a2) * r, overridePos ? clampSpawnY(overridePos.y) : -82.5, overridePos ? overridePos.z : Math.sin(a2) * r);
   group.rotation.y = Math.random() * Math.PI * 2;
   scene.add(group);
   crabs.push({ mesh: group, hp: (14 + Math.random() * 8) * 2, speed: 0.8 + Math.random() * 1.2, bob: Math.random() * Math.PI * 2, wanderAngle: Math.random() * Math.PI * 2, hitCooldown: 0 });
@@ -1630,7 +1644,7 @@ function makeCrystal() {
     group.add(shard);
   }
   const r = 12 + Math.random() * 80; const a = Math.random() * Math.PI * 2;
-  group.position.set(Math.cos(a) * r, -55 + Math.random() * 60, Math.sin(a) * r);
+  group.position.set(Math.cos(a) * r, randomSpawnY(-55, 5), Math.sin(a) * r);
   scene.add(group);
   crystals.push({ mesh: group, color, bob: Math.random() * Math.PI * 2, phase: Math.random() * Math.PI * 2 });
 }
@@ -1752,7 +1766,7 @@ function makeAnglerfish(overridePos) {
 
   const r = 35 + Math.random() * 55;
   const a = Math.random() * Math.PI * 2;
-  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -68 + Math.random() * 30, overridePos ? overridePos.z : Math.sin(a) * r);
+  group.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? clampSpawnY(overridePos.y) : randomSpawnY(-68, -38), overridePos ? overridePos.z : Math.sin(a) * r);
   group.rotation.y = Math.random() * Math.PI * 2;
   scene.add(group);
   anglerfish.push({ mesh: group, lureMesh: lure, lureHalo, lureColor,
@@ -1779,12 +1793,13 @@ function updateAnglerfish(dt, now) {
       const a = Math.random() * Math.PI * 2;
       af.mesh.position.x = player.pos.x + Math.cos(a) * r;
       af.mesh.position.z = player.pos.z + Math.sin(a) * r;
-      af.mesh.position.y = -68 + Math.random() * 30;
+      af.mesh.position.y = randomSpawnY(-68, -38);
     }
 
     af.bob += dt * 2.2;
     af.lurePhase += dt * 1.4;
     af.mesh.position.y += Math.sin(af.bob) * 0.015;
+    af.mesh.position.y = clampSpawnY(af.mesh.position.y);
 
     // Pulse the lure
     const lureIntensity = 1.8 + Math.sin(af.lurePhase * 2.5) * 0.8;
@@ -1862,7 +1877,7 @@ function makePearl(overridePos) {
   const orb = new THREE.Mesh(new THREE.SphereGeometry(0.22 + Math.random() * 0.12, 10, 8),
     new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.4, transparent: true, opacity: 0.85, roughness: 0.05, metalness: 0.8 }));
   const r = 10 + Math.random() * 85; const a = Math.random() * Math.PI * 2;
-  orb.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? overridePos.y : -83.2, overridePos ? overridePos.z : Math.sin(a) * r);
+  orb.position.set(overridePos ? overridePos.x : Math.cos(a) * r, overridePos ? clampSpawnY(overridePos.y) : -83.2, overridePos ? overridePos.z : Math.sin(a) * r);
   scene.add(orb);
   pearls.push({ mesh: orb, spin: (Math.random() - 0.5) * 2.0, bob: Math.random() * Math.PI * 2 });
 }
@@ -1882,7 +1897,7 @@ function makePlanktonPatch() {
     group.add(p);
   }
   const r = 15 + Math.random() * 75; const a = Math.random() * Math.PI * 2;
-  group.position.set(Math.cos(a) * r, -52 + Math.random() * 38, Math.sin(a) * r);
+  group.position.set(Math.cos(a) * r, randomSpawnY(-52, -14), Math.sin(a) * r);
   scene.add(group);
   planktonPatches.push({ mesh: group, bob: Math.random() * Math.PI * 2, phase: Math.random() * Math.PI * 2 });
 }
@@ -1911,7 +1926,7 @@ function makeMotes() {
     const color = moteColors[Math.floor(Math.random() * moteColors.length)];
     const mote = new THREE.Mesh(new THREE.SphereGeometry(0.07 + Math.random() * 0.09, 5, 5),
       new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.5 }));
-    mote.position.set((Math.random() - 0.5) * worldRadius, -20 + Math.random() * 80, (Math.random() - 0.5) * worldRadius);
+    mote.position.set((Math.random() - 0.5) * worldRadius, randomSpawnY(-20, 60), (Math.random() - 0.5) * worldRadius);
     mote.userData.phase = Math.random() * Math.PI * 2;
     mote.userData.speed = 0.5 + Math.random() * 0.9;
     mote.userData.baseY = mote.position.y;
@@ -2171,7 +2186,7 @@ function setGraphics(delta) {
 function openOverlay(id) {
   for (const key of ['mainMenu', 'pauseMenu', 'optionsMenu', 'upgradeMenu', 'gameOverMenu', 'whaleChatMenu', 'relicCompleteMenu', 'gameModeMenu', 'patchNotesMenu', 'creditsMenu', 'tutorialMenu', 'upgradeHintMenu', 'storyMenu', 'debugMenu']) el[key].classList.add('hidden');
   if (id) el[id].classList.remove('hidden');
-  if (renderer?.domElement) renderer.domElement.style.opacity = (id === 'mainMenu' || id === 'storyMenu' || id === 'tutorialMenu') ? '0' : '1';
+  if (renderer?.domElement) renderer.domElement.style.opacity = (id === 'mainMenu' || id === 'gameModeMenu' || id === 'storyMenu' || id === 'tutorialMenu') ? '0' : '1';
   if (id === 'mainMenu') applySkin(currentSkinIndex);
 }
 
@@ -2478,12 +2493,12 @@ function updatePlayer(dt) {
   }
 
   // Endless forward travel: keep player in continuous world space while scenery recycles around them.
-  if (player.pos.y < -82) {
-    player.pos.y = -82;
+  if (player.pos.y < minSwimY) {
+    player.pos.y = minSwimY;
     player.verticalVelocity = Math.max(0, player.verticalVelocity);
   }
-  if (player.pos.y > -2.5) {
-    player.pos.y = -2.5;
+  if (player.pos.y > maxSwimY) {
+    player.pos.y = maxSwimY;
     player.verticalVelocity = Math.min(0, player.verticalVelocity);
   }
   if (audioUnlocked) {
@@ -2601,7 +2616,7 @@ if (isFork) {
       const spawnDist = 12;
       const spawnPos = new THREE.Vector3(
         player.pos.x + Math.sin(fwdYaw) * spawnDist,
-        player.pos.y - 2,
+        clampSpawnY(player.pos.y - 2),
         player.pos.z + Math.cos(fwdYaw) * spawnDist
       );
       if (type === 'alien') makeAlien(spawnPos);
@@ -2637,7 +2652,7 @@ function updateAliens(dt, now) {
     if (alien.mesh.position.z - player.pos.z > worldRadius) alien.mesh.position.z -= worldRadius * 2;
     if (alien.mesh.position.z - player.pos.z < -worldRadius) alien.mesh.position.z += worldRadius * 2;
     if (alien.mesh.position.y - player.pos.y > 45) alien.mesh.position.y -= 90;
-    if (alien.mesh.position.y - player.pos.y < -45) alien.mesh.position.y += 90;
+    if (alien.mesh.position.y - player.pos.y < -45) alien.mesh.position.y = clampSpawnY(alien.mesh.position.y + 90);
   }
   for (let i = aliens.length - 1; i >= 0; i--) {
     const alien = aliens[i];
@@ -2646,6 +2661,7 @@ function updateAliens(dt, now) {
     if (dist > 0.001) alien.mesh.position.addScaledVector(toPlayer.normalize(), alien.speed * hostileSpeedMultiplier * dt);
     alien.bob += dt * (1.2 + alien.scale * 0.2);
     alien.mesh.position.y += Math.sin(alien.bob) * 0.01 * alien.scale;
+    alien.mesh.position.y = clampSpawnY(alien.mesh.position.y);
     alien.mesh.lookAt(player.pos);
 
     if (dist < (alien.collisionRadius + player.radius)) {
@@ -2697,9 +2713,10 @@ function updatePickups(dt) {
     if (p.mesh.position.z - player.pos.z > worldRadius) p.mesh.position.z -= worldRadius * 2;
     if (p.mesh.position.z - player.pos.z < -worldRadius) p.mesh.position.z += worldRadius * 2;
     if (p.mesh.position.y - player.pos.y > 45) p.mesh.position.y -= 90;
-    if (p.mesh.position.y - player.pos.y < -45) p.mesh.position.y += 90;
+    if (p.mesh.position.y - player.pos.y < -45) p.mesh.position.y = clampSpawnY(p.mesh.position.y + 90);
     p.mesh.rotation.y += dt * p.spin;
     p.mesh.position.y += Math.sin(performance.now() * 0.002 + i) * 0.01;
+    p.mesh.position.y = clampSpawnY(p.mesh.position.y);
     const dist = p.mesh.position.distanceTo(player.pos);
     if (dist < (config.pickupRadius() + p.collisionRadius * 0.5)) {
       scene.remove(p.mesh);
@@ -2782,12 +2799,13 @@ function updateSharks(dt, now) {
     if (shark.mesh.position.z - player.pos.z > worldRadius) shark.mesh.position.z -= worldRadius * 2;
     if (shark.mesh.position.z - player.pos.z < -worldRadius) shark.mesh.position.z += worldRadius * 2;
     if (shark.mesh.position.y - player.pos.y > 45) shark.mesh.position.y -= 90;
-    if (shark.mesh.position.y - player.pos.y < -45) shark.mesh.position.y += 90;
+    if (shark.mesh.position.y - player.pos.y < -45) shark.mesh.position.y = clampSpawnY(shark.mesh.position.y + 90);
     const toPlayer = player.pos.clone().sub(shark.mesh.position);
     const dist = toPlayer.length();
     if (dist > 0.001) shark.mesh.position.addScaledVector(toPlayer.normalize(), shark.speed * hostileSpeedMultiplier * dt);
     shark.bob += dt * 2.8;
     shark.mesh.position.y += Math.sin(shark.bob) * 0.02;
+    shark.mesh.position.y = clampSpawnY(shark.mesh.position.y);
     shark.mesh.lookAt(player.pos);
     shark.mesh.rotation.y -= Math.PI / 2;
     if (dist < (shark.collisionRadius + player.radius)) {
@@ -2849,6 +2867,7 @@ function updateTunas(dt, now) {
     tuna.mesh.position.x += Math.cos(tuna.wanderAngle) * tuna.speed * dt;
     tuna.mesh.position.z += Math.sin(tuna.wanderAngle) * tuna.speed * dt;
     tuna.mesh.position.y += Math.sin(tuna.bob) * 0.015;
+    tuna.mesh.position.y = clampSpawnY(tuna.mesh.position.y);
     // rotation.y=PI/2: local Z→world+X, local -Z→world -X
     // lookAt(-cos,0,-sin) points local -Z at (-cos,0,-sin) → local +Z points at (+cos,0,+sin) = swimDir
     // Tail at +Z local (world+X forward), head at -Z local (world-X backward)
@@ -2902,6 +2921,7 @@ function updateOctopi(dt, now) {
     const octo = octopi[i];
     octo.bob += dt * 1.5;
     octo.mesh.position.y += Math.sin(octo.bob) * 0.018;
+    octo.mesh.position.y = clampSpawnY(octo.mesh.position.y);
     if (octo.mesh.position.x - player.pos.x > worldRadius) octo.mesh.position.x -= worldRadius * 2;
     if (octo.mesh.position.x - player.pos.x < -worldRadius) octo.mesh.position.x += worldRadius * 2;
     if (octo.mesh.position.z - player.pos.z > worldRadius) octo.mesh.position.z -= worldRadius * 2;
@@ -3007,6 +3027,7 @@ function updateRelics(dt) {
     relic.bob += dt * 1.6;
     relic.mesh.rotation.y += dt * relic.spin;
     relic.mesh.position.y += Math.sin(relic.bob) * 0.01;
+    relic.mesh.position.y = clampSpawnY(relic.mesh.position.y);
     relic.pulse += dt * 2.4;
     if (relic.halo) {
       const pulse = 1 + Math.sin(relic.pulse) * 0.18;
@@ -3107,6 +3128,7 @@ function updateJellyfish(dt) {
     jf.bob += dt * 1.1;
     jf.phase += dt * 0.6;
     jf.mesh.position.y += Math.sin(jf.bob) * 0.018;
+    jf.mesh.position.y = clampSpawnY(jf.mesh.position.y);
     jf.mesh.position.x += Math.sin(jf.phase) * 0.006;
     jf.mesh.position.z += Math.cos(jf.phase * 0.7) * 0.006;
     // Pulse the bell
@@ -3126,6 +3148,7 @@ function updateSeahorses(dt) {
   for (const sh of seahorses) {
     sh.bob += dt * 1.4;
     sh.mesh.position.y += Math.sin(sh.bob) * 0.015;
+    sh.mesh.position.y = clampSpawnY(sh.mesh.position.y);
     sh.wanderAngle += dt * 0.4;
     sh.mesh.position.x += Math.cos(sh.wanderAngle) * sh.speed * dt;
     sh.mesh.position.z += Math.sin(sh.wanderAngle) * sh.speed * dt;
@@ -3146,6 +3169,7 @@ function updateGlowOrbs(dt, now) {
     orb.bob += dt * 2.2;
     orb.phase += dt * 0.8;
     orb.mesh.position.y += Math.sin(orb.bob) * 0.012;
+    orb.mesh.position.y = clampSpawnY(orb.mesh.position.y);
     const intensity = 0.8 + Math.sin(orb.phase * 3 + now * 0.001) * 0.4;
     orb.mesh.children[0].material.emissiveIntensity = intensity;
     orb.mesh.children[1].material.opacity = 0.08 + Math.sin(orb.phase * 2) * 0.07;
@@ -3205,6 +3229,7 @@ function updateBubbles(dt) {
       new THREE.MeshBasicMaterial({ color: 0xaaddff, transparent: true, opacity: 0.55 })
     );
     b.position.copy(axolotl.position).add(new THREE.Vector3((Math.random() - 0.5) * 1.2, 0.5, (Math.random() - 0.5) * 0.8));
+    b.position.y = clampSpawnY(b.position.y);
     scene.add(b);
     bubbles.push({ mesh: b, life: 2.2 + Math.random() * 1.2, speed: 1.2 + Math.random() * 0.8 });
   }
@@ -3213,7 +3238,7 @@ function updateBubbles(dt) {
     b.life -= dt;
     b.mesh.position.y += b.speed * dt;
     b.mesh.material.opacity = Math.max(0, b.life * 0.3);
-    if (b.life <= 0) { scene.remove(b.mesh); bubbles.splice(i, 1); }
+    if (b.mesh.position.y > maxSwimY || b.life <= 0) { scene.remove(b.mesh); bubbles.splice(i, 1); }
   }
 }
 

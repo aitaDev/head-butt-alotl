@@ -17,6 +17,9 @@ canvas { display: block; transition: opacity 0.25s ease; }
     radial-gradient(circle at 82% 14%, rgba(255,185,230,0.22), transparent 22%),
     linear-gradient(180deg, rgba(61,171,255,1) 0%, rgba(40,124,232,1) 32%, rgba(22,160,170,1) 68%, rgba(24,122,86,1) 100%);
 }
+#gameModeMenu {
+  background: radial-gradient(circle at top, rgba(60,100,180,0.35), rgba(0,0,0,0.85));
+}
 .thunder-panel {
   animation: thunderPulse 0.18s steps(2) infinite alternate;
   box-shadow: 0 0 50px rgba(255,255,255,0.35), 0 0 120px rgba(120,160,255,0.25);
